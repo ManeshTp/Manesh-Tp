@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cash Reconcilation sheet - KLZD (Live Sync)</title>
+    <title>Cash Reconciliation sheet - KLZD (Live Sync)</title>
     <style>
         :root {
-            --primary: #1e293b;
-            --primary-accent: #2563eb;
-            --bg: #f8fafc;
-            --card-bg: #ffffff;
-            --border: #cbd5e1;
-            --text: #0f172a;
-            --danger-bg: #fef2f2;
-            --danger-text: #991b1b;
-            --danger-border: #fca5a5;
-            --success-bg: #f0fdf4;
-            --success-text: #166534;
+            --primary: #f1f5f9;
+            --primary-accent: #3b82f6;
+            --bg: #182232;
+            --card-bg: #222f46;
+            --card-hover: #2b3b57;
+            --border: #33435e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --danger-bg: #4c1d1d;
+            --danger-text: #fca5a5;
+            --danger-border: #7f1d1d;
+            --success-bg: #064e3b;
+            --success-text: #6ee7b7;
         }
 
         body {
@@ -52,8 +54,9 @@
         .save-indicator {
             font-size: 12px;
             font-weight: 600;
-            color: #059669;
-            background: #dcfce7;
+            color: #34d399;
+            background: rgba(52, 211, 153, 0.12);
+            border: 1px solid rgba(52, 211, 153, 0.25);
             padding: 6px 12px;
             border-radius: 20px;
             display: inline-flex;
@@ -62,7 +65,7 @@
         }
 
         .btn {
-            background-color: #3b82f6;
+            background-color: #2563eb;
             color: white;
             border: none;
             padding: 8px 14px;
@@ -76,51 +79,67 @@
             gap: 6px;
         }
 
-        .btn:hover { background-color: #2563eb; }
-        .btn-secondary { background-color: #64748b; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-secondary { background-color: #334155; color: #f8fafc; }
         .btn-secondary:hover { background-color: #475569; }
+
+        .tabs-bar-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #1e293b;
+            border: 1px solid var(--border);
+            padding: 6px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
 
         .tabs-container {
             display: flex;
             align-items: center;
             gap: 8px;
-            background: #e2e8f0;
-            padding: 6px;
-            border-radius: 8px;
-            margin-bottom: 20px;
             overflow-x: auto;
+            flex-grow: 1;
+            scrollbar-width: thin;
         }
 
         .tab-btn {
             padding: 8px 16px;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
             border-radius: 6px;
             font-weight: 600;
             font-size: 13px;
-            color: #475569;
+            color: var(--text-muted);
             cursor: pointer;
             white-space: nowrap;
         }
 
         .tab-btn.active {
-            background: #ffffff;
-            color: var(--primary-accent);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            color: #60a5fa;
+            border-color: var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
 
         .add-date-btn {
-            background: #ffffff;
-            border: 1px dashed #94a3b8;
-            padding: 8px 12px;
+            background: var(--card-bg);
+            border: 1px dashed #3b82f6;
+            padding: 8px 14px;
             border-radius: 6px;
             font-size: 13px;
-            font-weight: 600;
-            color: #475569;
+            font-weight: 700;
+            color: #60a5fa;
             cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
         }
 
-        .add-date-btn:hover { background: #f1f5f9; }
+        .add-date-btn:hover { 
+            background: #2563eb; 
+            color: #ffffff;
+        }
 
         .summary-grid {
             display: grid;
@@ -132,15 +151,15 @@
         .card {
             background: var(--card-bg);
             padding: 16px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
         }
 
         .card-title {
             font-size: 12px;
             font-weight: 700;
-            color: #64748b;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
@@ -149,12 +168,13 @@
             font-size: 22px;
             font-weight: 700;
             margin-top: 6px;
+            color: #ffffff;
         }
 
         .section-card {
             background: var(--card-bg);
             padding: 18px;
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             margin-bottom: 20px;
         }
@@ -175,32 +195,32 @@
             font-size: 11px;
             font-weight: 700;
             margin-bottom: 4px;
-            color: #475569;
+            color: var(--text-muted);
         }
 
         .form-group input, .form-group select {
             padding: 7px 10px;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
             border-radius: 6px;
             font-size: 13px;
             outline: none;
-            background-color: white;
+            background-color: #182232;
+            color: #ffffff;
         }
 
         .form-group input:focus, .form-group select:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
-        /* Fixed Height & Scrollable Table Container for Frozen Header */
         .table-container {
             background: var(--card-bg);
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             overflow-x: auto;
             max-height: 480px;
             overflow-y: auto;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
             margin-bottom: 24px;
         }
 
@@ -212,41 +232,32 @@
             text-align: center;
         }
 
-        /* Sticky / Frozen Table Header */
         th {
             position: sticky;
             top: 0;
             z-index: 10;
-            background-color: #1e293b;
-            color: #ffffff;
-            padding: 10px 6px;
+            background-color: #182232;
+            color: #f8fafc;
+            padding: 12px 6px;
             font-weight: 600;
             white-space: nowrap;
-            border-bottom: 2px solid #0f172a;
+            border-bottom: 2px solid var(--border);
         }
 
         td {
-            padding: 6px 6px;
-            border-bottom: 1px solid #cbd5e1;
+            padding: 8px 6px;
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
+            color: #e2e8f0;
         }
 
-        /* Distinct Row Separation with Alternating Colors & Hover */
-        tbody tr:nth-child(even) {
-            background-color: #ffffff;
-        }
-
-        tbody tr:nth-child(odd) {
-            background-color: #f1f5f9;
-        }
-
-        tbody tr:hover {
-            background-color: #e2e8f0;
-        }
+        tbody tr:nth-child(even) { background-color: #222f46; }
+        tbody tr:nth-child(odd) { background-color: #1c273b; }
+        tbody tr:hover { background-color: var(--card-hover); }
 
         .sno-cell {
             font-weight: 700;
-            color: #64748b;
+            color: var(--text-muted);
             width: 35px;
             text-align: center;
         }
@@ -259,23 +270,24 @@
             padding: 5px;
             font-size: 13px;
             border-radius: 4px;
+            color: #ffffff;
         }
 
         .editable-input:hover {
-            border-color: #cbd5e1;
-            background-color: #ffffff;
+            border-color: var(--border);
+            background-color: #182232;
         }
 
         .editable-input:focus {
             border-color: var(--primary-accent);
-            background-color: #ffffff;
+            background-color: #182232;
             outline: none;
-            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
         }
 
         .editable-name { width: 130px; text-align: left; font-weight: 600; }
         .editable-rts { width: 75px; text-align: right; font-weight: 600; }
-        .editable-pending { width: 65px; text-align: right; font-weight: 600; color: #991b1b; }
+        .editable-pending { width: 65px; text-align: right; font-weight: 600; color: #fca5a5; }
 
         .badge-shortage {
             background-color: var(--danger-bg);
@@ -295,7 +307,7 @@
         }
 
         .delete-btn {
-            color: #ef4444;
+            color: #f87171;
             background: none;
             border: none;
             cursor: pointer;
@@ -312,10 +324,10 @@
 
         .deno-card {
             background: var(--card-bg);
-            border-radius: 8px;
+            border-radius: 10px;
             border: 1px solid var(--border);
             padding: 18px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
         }
 
         .deno-card h3 {
@@ -331,7 +343,9 @@
         .final-input {
             width: 70px;
             text-align: center;
-            border: 1px solid #cbd5e1;
+            border: 1px solid var(--border);
+            background: #182232;
+            color: #ffffff;
             padding: 6px;
             border-radius: 4px;
             font-weight: 600;
@@ -343,14 +357,13 @@
             border-radius: 12px;
             font-weight: 700;
         }
-        .status-match { background: #dcfce7; color: #15803d; }
-        .status-mismatch { background: #fee2e2; color: #b91c1c; }
+        .status-match { background: #064e3b; color: #6ee7b7; }
+        .status-mismatch { background: #7f1d1d; color: #fca5a5; }
 
-        /* Modal styling for Associate Management */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.6);
             display: none;
             justify-content: center;
             align-items: center;
@@ -358,12 +371,14 @@
         }
 
         .modal-card {
-            background: #ffffff;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
             width: 90%;
             max-width: 450px;
-            border-radius: 8px;
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
         }
 
         .modal-header {
@@ -380,7 +395,7 @@
             border: none;
             font-size: 20px;
             cursor: pointer;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
         .associate-list {
@@ -389,6 +404,7 @@
             border: 1px solid var(--border);
             border-radius: 6px;
             margin-top: 12px;
+            background: #182232;
         }
 
         .associate-item {
@@ -396,13 +412,12 @@
             justify-content: space-between;
             align-items: center;
             padding: 8px 12px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
             font-size: 13px;
         }
 
         .associate-item:last-child { border-bottom: none; }
 
-        /* Final Deno Vertical Grid Container */
         .final-deno-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -417,16 +432,16 @@
 
         .v-deno-table th, .v-deno-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             font-size: 13px;
         }
 
         .v-deno-table th {
             position: static;
-            background-color: #f8fafc;
-            color: #475569;
+            background-color: #182232;
+            color: var(--text-muted);
             text-align: left;
-            border-bottom: 2px solid #cbd5e1;
+            border-bottom: 2px solid var(--border);
         }
 
         .pending-list-table {
@@ -437,16 +452,16 @@
 
         .pending-list-table th {
             position: static;
-            background-color: #fef2f2;
-            color: #991b1b;
+            background-color: #4c1d1d;
+            color: #fca5a5;
             text-align: left;
             padding: 8px 12px;
-            border-bottom: 2px solid #fca5a5;
+            border-bottom: 2px solid #7f1d1d;
         }
 
         .pending-list-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid #fee2e2;
+            border-bottom: 1px solid #4c1d1d;
         }
     </style>
 </head>
@@ -454,11 +469,11 @@
 
     <div class="header">
         <div>
-            <h1>Cash Reconcilation sheet - KLZD</h1>
-            <p style="color: #64748b; margin: 4px 0 0 0; font-size: 13px;">Manage multi-day collections, associate entries, and end-of-day physical cash verification.</p>
+            <h1>Cash Reconciliation sheet - KLZD</h1>
+            <p style="color: var(--text-muted); margin: 4px 0 0 0; font-size: 13px;">Manage multi-day collections, associate entries, and end-of-day physical cash verification.</p>
         </div>
         <div class="header-actions">
-            <div id="saveStatus" class="save-indicator">🔄 Syncing with Cloud...</div>
+            <div id="saveStatus" class="save-indicator">🔄 Fetching Cloud Data...</div>
             <button class="btn btn-secondary" onclick="openAssociateModal()">👥 Manage Associates</button>
             <button class="btn btn-secondary" onclick="exportJSON()">📥 Export Backup</button>
             <label class="btn btn-secondary" style="margin: 0; cursor: pointer;">
@@ -467,12 +482,11 @@
         </div>
     </div>
 
-    <!-- Day-by-Day Sheet Selector Tabs -->
-    <div class="tabs-container" id="dateTabs">
+    <div class="tabs-bar-wrapper">
         <button class="add-date-btn" onclick="addNewDatePrompt()">+ New Date Sheet</button>
+        <div class="tabs-container" id="dateTabs"></div>
     </div>
 
-    <!-- Overall Day Summary Cards -->
     <div class="summary-grid">
         <div class="card">
             <div class="card-title">Expected RTS Total</div>
@@ -483,18 +497,17 @@
             <div class="card-value" id="sum-collected">₹0</div>
         </div>
         <div class="card">
-            <div class="card-title" style="color: #991b1b;">Total Pending</div>
-            <div class="card-value" style="color: #991b1b;" id="sum-pending">₹0</div>
+            <div class="card-title" style="color: #fca5a5;">Total Pending</div>
+            <div class="card-value" style="color: #fca5a5;" id="sum-pending">₹0</div>
         </div>
         <div class="card">
             <div class="card-title">Vault / Final Physical Cash</div>
-            <div class="card-value" id="sum-final-cash" style="color: #2563eb;">₹0</div>
+            <div class="card-value" id="sum-final-cash" style="color: #60a5fa;">₹0</div>
         </div>
     </div>
 
-    <!-- Entry Form -->
     <div class="section-card">
-        <h3 style="margin-top:0; margin-bottom: 12px; font-size: 15px; color: #1e293b;">Add Collection Entry for <span id="currentDateDisplay" style="color: #2563eb;"></span></h3>
+        <h3 style="margin-top:0; margin-bottom: 12px; font-size: 15px; color: var(--primary);">Add Collection Entry for <span id="currentDateDisplay" style="color: #60a5fa;"></span></h3>
         <form id="cashForm" class="form-grid">
             <div class="form-group" style="grid-column: span 2;">
                 <label>Associate Name</label>
@@ -518,7 +531,6 @@
         </form>
     </div>
 
-    <!-- Main Data Table -->
     <div class="table-container">
         <table>
             <thead>
@@ -539,16 +551,11 @@
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody id="cashTableBody">
-                <!-- Dynamic Rows Rendering -->
-            </tbody>
+            <tbody id="cashTableBody"></tbody>
         </table>
     </div>
 
-    <!-- Vertical Layout Section -->
     <div class="vertical-layout">
-        
-        <!-- Calculated Denomination Total Card -->
         <div class="deno-card">
             <h3>Calculated Denomination Total (Associates Sheet)</h3>
             <div style="overflow-x: auto;">
@@ -577,8 +584,8 @@
                             <td id="calc-c20">0</td>
                             <td id="calc-c10">0</td>
                             <td id="calc-coins">₹0</td>
-                            <td rowspan="2" id="calc-rts-total" style="font-size: 15px; font-weight: bold; color: #475569;">₹0</td>
-                            <td rowspan="2" id="calc-grand-val" style="font-size: 15px; font-weight: bold; color: #2563eb;">₹0</td>
+                            <td rowspan="2" id="calc-rts-total" style="font-size: 15px; font-weight: bold; color: var(--text-muted);">₹0</td>
+                            <td rowspan="2" id="calc-grand-val" style="font-size: 15px; font-weight: bold; color: #60a5fa;">₹0</td>
                         </tr>
                         <tr>
                             <td><strong>Value (₹)</strong></td>
@@ -595,28 +602,24 @@
             </div>
         </div>
 
-        <!-- Final Deno Sheet (Vertical Alignment Layout) -->
         <div class="deno-card" style="border-color: #3b82f6;">
             <h3>
                 <span>Final Deno Sheet (Physical Vault Count)</span>
                 <span id="reconcileStatus" class="status-pill status-match">Matched</span>
             </h3>
             
-            <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px;">
+            <div style="background: #182232; border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px;">
                 <div>
                     <strong>Final Deno RTS Amount:</strong> 
                     ₹<input type="number" id="fdRtsAmount" class="final-input" style="width: 90px;" value="0" oninput="updateFinalDenoRts(this.value)">
                 </div>
-                <div>Sum of Pending: <strong id="fd-total-pending" style="color: #991b1b;">₹0</strong></div>
+                <div>Sum of Pending: <strong id="fd-total-pending" style="color: #fca5a5;">₹0</strong></div>
                 <div>Diff (Variance): <strong id="fdDiffVal">₹0</strong></div>
             </div>
 
-            <!-- Two-Column Side-by-Side Layout -->
             <div class="final-deno-grid">
-                
-                <!-- Left Side: Vertical Physical Vault Count Table -->
-                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px;">
-                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #1e293b; font-size: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px;">💵 Physical Vault Count</h4>
+                <div style="background: #182232; border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--primary); font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">💵 Physical Vault Count</h4>
                     <table class="v-deno-table">
                         <thead>
                             <tr>
@@ -663,17 +666,16 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr style="background: #f8fafc; font-weight: bold;">
+                            <tr style="background: #222f46; font-weight: bold;">
                                 <td colspan="2" style="padding: 10px 12px;">Final Physical Cash:</td>
-                                <td style="text-align: right; font-size: 15px; color: #059669; padding: 10px 12px;" id="final-grand-val">₹0</td>
+                                <td style="text-align: right; font-size: 15px; color: #34d399; padding: 10px 12px;" id="final-grand-val">₹0</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <!-- Right Side: Associate Pending Amounts Card -->
-                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px;">
-                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #991b1b; font-size: 14px; border-bottom: 1px solid #fca5a5; padding-bottom: 6px;">📋 Pending Amounts by Associate</h4>
+                <div style="background: #182232; border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #fca5a5; font-size: 14px; border-bottom: 1px solid #7f1d1d; padding-bottom: 6px;">📋 Pending Amounts by Associate</h4>
                     <table class="pending-list-table">
                         <thead>
                             <tr>
@@ -681,24 +683,20 @@
                                 <th style="text-align: right;">Pending Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="associatePendingTableBody">
-                            <!-- Dynamic Associate Pending Rows -->
-                        </tbody>
+                        <tbody id="associatePendingTableBody"></tbody>
                         <tfoot>
-                            <tr style="font-weight: bold; background-color: #fef2f2;">
-                                <td style="padding: 10px 12px; color: #991b1b;">Total Pending:</td>
-                                <td style="text-align: right; padding: 10px 12px; color: #991b1b; font-size: 15px;" id="side-total-pending">₹0</td>
+                            <tr style="font-weight: bold; background-color: #4c1d1d;">
+                                <td style="padding: 10px 12px; color: #fca5a5;">Total Pending:</td>
+                                <td style="text-align: right; padding: 10px 12px; color: #fca5a5; font-size: 15px;" id="side-total-pending">₹0</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
-
             </div>
         </div>
-
     </div>
 
-    <!-- Associate Management Modal -->
+    <!-- Associate Modal -->
     <div id="associateModal" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-header">
@@ -706,17 +704,15 @@
                 <button class="close-modal" onclick="closeAssociateModal()">✕</button>
             </div>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="newAssociateInput" placeholder="Enter associate full name" style="flex:1; padding:7px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                <input type="text" id="newAssociateInput" placeholder="Enter associate full name" style="flex:1; padding:7px; border: 1px solid var(--border); background: #182232; color: #fff; border-radius: 6px;">
                 <button class="btn btn-primary" onclick="addAssociate()">Add</button>
             </div>
-            <div class="associate-list" id="associateListContainer">
-                <!-- Dynamic Associates List -->
-            </div>
+            <div class="associate-list" id="associateListContainer"></div>
         </div>
     </div>
 
     <script>
-        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxGjMmYZ4iSuuoaCTD5CQJWVHaQJ_U1XycUSx5L9CrOag0SO6XPVL1hbVkevu1lJ8CLqg/exec';
+        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynh8ReggHPVdVxt6l_wiADo2R6m49BKBDVWm8Tggmg7vXs2w7jY2XDXXsnSX74Uhwryg/exec';
 
         const todayStr = new Date().toISOString().split('T')[0];
 
@@ -733,7 +729,15 @@
 
         let activeDate = todayStr;
         let isSaving = false;
+        let isInitialLoaded = false;
         let saveDebounceTimer = null;
+
+        function getLatestDate(sheetsObj) {
+            const keys = Object.keys(sheetsObj || {});
+            if (keys.length === 0) return todayStr;
+            keys.sort((a, b) => new Date(b) - new Date(a));
+            return keys[0];
+        }
 
         async function fetchLiveData() {
             if (isSaving || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
@@ -741,77 +745,68 @@
             }
             
             try {
-                const response = await fetch(GOOGLE_APP_SCRIPT_URL, {
-                    method: 'GET',
-                    redirect: 'follow'
-                });
-                
+                const response = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
                 const textData = await response.text();
                 let parsed = null;
                 
-                try {
-                    parsed = JSON.parse(textData);
-                } catch(e) {
-                    console.log("Raw text received:", textData);
-                }
+                try { parsed = JSON.parse(textData); } catch(e) {}
 
-                if (parsed && typeof parsed === 'object') {
-                    if (!parsed.sheets || Object.keys(parsed.sheets).length === 0) {
-                        parsed.sheets = appData.sheets;
-                        parsed.activeDate = todayStr;
+                if (parsed && typeof parsed === 'object' && parsed.sheets && Object.keys(parsed.sheets).length > 0) {
+                    appData = parsed;
+                    if (!isInitialLoaded) {
+                        activeDate = getLatestDate(appData.sheets);
+                        isInitialLoaded = true;
+                    } else if (!appData.sheets[activeDate]) {
+                        activeDate = getLatestDate(appData.sheets);
                     }
-                    if (!parsed.associates) parsed.associates = [];
 
-                    const localDataStr = JSON.stringify(appData);
-                    const serverDataStr = JSON.stringify(parsed);
-
-                    if (localDataStr !== serverDataStr) {
-                        appData = parsed;
-                        if (!appData.sheets[activeDate]) {
-                            activeDate = appData.activeDate || Object.keys(appData.sheets)[0] || todayStr;
-                        }
-                        renderTabs();
-                        renderAssociateDropdown();
-                        renderSheetData();
-                    }
-                    updateStatus('🟢 Live Synced', '#dcfce7', '#059669');
-                } else {
                     renderTabs();
                     renderAssociateDropdown();
                     renderSheetData();
-                    updateStatus('🟢 Live Synced (Fresh)', '#dcfce7', '#059669');
+                    updateStatus('🟢 Live Synced', 'rgba(52, 211, 153, 0.12)', '#34d399');
+                } else {
+                    isInitialLoaded = true;
+                    renderTabs();
+                    renderAssociateDropdown();
+                    renderSheetData();
+                    updateStatus('🟢 Connected to Cloud', 'rgba(52, 211, 153, 0.12)', '#34d399');
                 }
             } catch (err) {
                 console.error("Fetch error:", err);
-                updateStatus('⚠️ Offline / Sync Error', '#fee2e2', '#b91c1c');
+                updateStatus('⚠️ Cloud Sync Error', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             }
         }
 
         function debouncedSaveData() {
-            updateStatus('⚡ Saving changes...', '#fef3c7', '#92400e');
+            if (!isInitialLoaded) return;
+            updateStatus('⚡ Saving changes...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             clearTimeout(saveDebounceTimer);
-            saveDebounceTimer = setTimeout(() => {
-                saveData();
-            }, 500);
+            saveDebounceTimer = setTimeout(() => { saveData(); }, 500);
         }
 
         async function saveData() {
+            if (!isInitialLoaded) return;
             isSaving = true;
-            updateStatus('⚡ Syncing with Cloud...', '#fef3c7', '#92400e');
+            updateStatus('⚡ Syncing with Cloud...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             
             try {
                 appData.activeDate = activeDate;
+                const payload = JSON.stringify(appData);
+
+                const params = new URLSearchParams();
+                params.append('data', payload);
+
                 await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(appData)
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: params.toString()
                 });
                 
-                updateStatus('🟢 Saved Live', '#dcfce7', '#059669');
+                updateStatus('🟢 Saved Live', 'rgba(52, 211, 153, 0.12)', '#34d399');
             } catch (err) {
                 console.error("Save error:", err);
-                updateStatus('❌ Save Failed', '#fee2e2', '#b91c1c');
+                updateStatus('❌ Save Failed', 'rgba(239, 68, 68, 0.12)', '#ef4444');
             } finally {
                 isSaving = false;
             }
@@ -823,18 +818,12 @@
                 statusElem.textContent = text;
                 statusElem.style.background = bg;
                 statusElem.style.color = color;
+                statusElem.style.borderColor = color;
             }
         }
 
-        /* Associate Manager Functions */
-        function openAssociateModal() {
-            renderAssociateList();
-            document.getElementById('associateModal').style.display = 'flex';
-        }
-
-        function closeAssociateModal() {
-            document.getElementById('associateModal').style.display = 'none';
-        }
+        function openAssociateModal() { renderAssociateList(); document.getElementById('associateModal').style.display = 'flex'; }
+        function closeAssociateModal() { document.getElementById('associateModal').style.display = 'none'; }
 
         function addAssociate() {
             const input = document.getElementById('newAssociateInput');
@@ -860,16 +849,13 @@
             const container = document.getElementById('associateListContainer');
             container.innerHTML = '';
             if (!appData.associates || appData.associates.length === 0) {
-                container.innerHTML = '<div style="padding: 12px; text-align: center; color: #94a3b8; font-size: 13px;">No associates saved yet.</div>';
+                container.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 13px;">No associates saved yet.</div>';
                 return;
             }
             appData.associates.forEach(name => {
                 const item = document.createElement('div');
                 item.className = 'associate-item';
-                item.innerHTML = `
-                    <span><strong>${name}</strong></span>
-                    <button class="delete-btn" onclick="deleteAssociate('${name}')">✕</button>
-                `;
+                item.innerHTML = `<span><strong>${name}</strong></span><button class="delete-btn" onclick="deleteAssociate('${name}')">✕</button>`;
                 container.appendChild(item);
             });
         }
@@ -878,12 +864,10 @@
             const select = document.getElementById('associateSelect');
             const currentValue = select.value;
             select.innerHTML = '<option value="">-- Select Associate --</option>';
-            
             if (appData.associates) {
                 appData.associates.forEach(name => {
                     const opt = document.createElement('option');
-                    opt.value = name;
-                    opt.textContent = name;
+                    opt.value = name; opt.textContent = name;
                     select.appendChild(opt);
                 });
             }
@@ -893,7 +877,6 @@
         function renderTabs() {
             const tabsContainer = document.getElementById('dateTabs');
             tabsContainer.innerHTML = '';
-
             const sortedDates = Object.keys(appData.sheets).sort((a, b) => new Date(b) - new Date(a));
 
             sortedDates.forEach(dateStr => {
@@ -904,13 +887,6 @@
                 btn.onclick = () => switchDate(dateStr);
                 tabsContainer.appendChild(btn);
             });
-
-            const addBtn = document.createElement('button');
-            addBtn.type = 'button';
-            addBtn.className = 'add-date-btn';
-            addBtn.textContent = '+ New Date Sheet';
-            addBtn.onclick = addNewDatePrompt;
-            tabsContainer.appendChild(addBtn);
 
             document.getElementById('currentDateDisplay').textContent = activeDate;
         }
@@ -937,14 +913,7 @@
         }
 
         function calculateEntry(item) {
-            const totalCollected = (Number(item.c500 || 0) * 500) + 
-                                  (Number(item.c200 || 0) * 200) + 
-                                  (Number(item.c100 || 0) * 100) + 
-                                  (Number(item.c50 || 0) * 50) + 
-                                  (Number(item.c20 || 0) * 20) + 
-                                  (Number(item.c10 || 0) * 10) + 
-                                  (Number(item.coins || 0));
-            
+            const totalCollected = (Number(item.c500 || 0) * 500) + (Number(item.c200 || 0) * 200) + (Number(item.c100 || 0) * 100) + (Number(item.c50 || 0) * 50) + (Number(item.c20 || 0) * 20) + (Number(item.c10 || 0) * 10) + (Number(item.coins || 0));
             const balance = totalCollected - Number(item.rts || 0);
             return { totalCollected, balance };
         }
@@ -961,10 +930,7 @@
             const tbody = document.getElementById('cashTableBody');
             tbody.innerHTML = '';
 
-            let grandRTS = 0;
-            let grandCollected = 0;
-            let grandPending = 0;
-
+            let grandRTS = 0, grandCollected = 0, grandPending = 0;
             let calcDeno = { c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 };
 
             records.forEach((record, index) => {
@@ -1005,12 +971,10 @@
                 tbody.appendChild(row);
             });
 
-            // Summary Totals
             document.getElementById('sum-rts').textContent = '₹' + grandRTS.toLocaleString('en-IN');
             document.getElementById('sum-collected').textContent = '₹' + grandCollected.toLocaleString('en-IN');
             document.getElementById('sum-pending').textContent = '₹' + grandPending.toLocaleString('en-IN');
 
-            // Calculated Deno Block
             document.getElementById('calc-c500').textContent = calcDeno.c500;
             document.getElementById('calc-c200').textContent = calcDeno.c200;
             document.getElementById('calc-c100').textContent = calcDeno.c100;
@@ -1030,7 +994,6 @@
             document.getElementById('calc-rts-total').textContent = '₹' + grandRTS.toLocaleString('en-IN');
             document.getElementById('calc-grand-val').textContent = '₹' + grandCollected.toLocaleString('en-IN');
 
-            // Final Deno Block
             const fdRtsVal = (finalDeno.rts !== null && finalDeno.rts !== undefined) ? finalDeno.rts : grandRTS;
             document.getElementById('fdRtsAmount').value = fdRtsVal;
             document.getElementById('fd-total-pending').textContent = '₹' + grandPending.toLocaleString('en-IN');
@@ -1043,13 +1006,7 @@
             document.getElementById('fd10').value = finalDeno.c10 || 0;
             document.getElementById('fdCoins').value = finalDeno.coins || 0;
 
-            const finalTotalCash = (Number(finalDeno.c500 || 0) * 500) + 
-                                   (Number(finalDeno.c200 || 0) * 200) + 
-                                   (Number(finalDeno.c100 || 0) * 100) + 
-                                   (Number(finalDeno.c50 || 0) * 50) + 
-                                   (Number(finalDeno.c20 || 0) * 20) + 
-                                   (Number(finalDeno.c10 || 0) * 10) + 
-                                   (Number(finalDeno.coins || 0));
+            const finalTotalCash = (Number(finalDeno.c500 || 0) * 500) + (Number(finalDeno.c200 || 0) * 200) + (Number(finalDeno.c100 || 0) * 100) + (Number(finalDeno.c50 || 0) * 50) + (Number(finalDeno.c20 || 0) * 20) + (Number(finalDeno.c10 || 0) * 10) + (Number(finalDeno.coins || 0));
 
             document.getElementById('vfd-c500').textContent = '₹' + ((finalDeno.c500 || 0) * 500).toLocaleString('en-IN');
             document.getElementById('vfd-c200').textContent = '₹' + ((finalDeno.c200 || 0) * 200).toLocaleString('en-IN');
@@ -1072,11 +1029,11 @@
             if (diff === 0) {
                 statusElem.textContent = "Matched Exact";
                 statusElem.className = "status-pill status-match";
-                diffElem.style.color = "#15803d";
+                diffElem.style.color = "#34d399";
             } else {
                 statusElem.textContent = `Variance: ₹${diff}`;
                 statusElem.className = "status-pill status-mismatch";
-                diffElem.style.color = "#b91c1c";
+                diffElem.style.color = "#fca5a5";
             }
 
             renderPendingAssociatesList();
@@ -1091,16 +1048,13 @@
             const pendingRecords = (currentSheet.records || []).filter(r => Number(r.pending) > 0);
 
             if (pendingRecords.length === 0) {
-                pendingTbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #059669; padding: 12px; font-weight: 600;">🎉 No pending amounts for today!</td></tr>`;
+                pendingTbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #34d399; padding: 12px; font-weight: 600;">🎉 No pending amounts for today!</td></tr>`;
             } else {
                 pendingRecords.forEach(record => {
                     const pAmt = Number(record.pending) || 0;
                     totalPending += pAmt;
                     const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td style="font-weight: 600; color: #1e293b;">${record.name || 'Unnamed Associate'}</td>
-                        <td style="text-align: right; font-weight: 700; color: #991b1b;">₹${pAmt.toLocaleString('en-IN')}</td>
-                    `;
+                    tr.innerHTML = `<td style="font-weight: 600; color: var(--primary);">${record.name || 'Unnamed Associate'}</td><td style="text-align: right; font-weight: 700; color: #fca5a5;">₹${pAmt.toLocaleString('en-IN')}</td>`;
                     pendingTbody.appendChild(tr);
                 });
             }
@@ -1109,11 +1063,8 @@
         }
 
         function updateRecord(index, key, value) {
-            if (key === 'name') {
-                appData.sheets[activeDate].records[index][key] = value;
-            } else {
-                appData.sheets[activeDate].records[index][key] = Number(value) || 0;
-            }
+            if (key === 'name') appData.sheets[activeDate].records[index][key] = value;
+            else appData.sheets[activeDate].records[index][key] = Number(value) || 0;
 
             const record = appData.sheets[activeDate].records[index];
             const { totalCollected, balance } = calculateEntry(record);
@@ -1131,10 +1082,7 @@
         }
 
         function updateFinalDeno(fieldKey, value) {
-            const keyMap = {
-                'fd500': 'c500', 'fd200': 'c200', 'fd100': 'c100',
-                'fd50': 'c50', 'fd20': 'c20', 'fd10': 'c10', 'fdCoins': 'coins'
-            };
+            const keyMap = { 'fd500': 'c500', 'fd200': 'c200', 'fd100': 'c100', 'fd50': 'c50', 'fd20': 'c20', 'fd10': 'c10', 'fdCoins': 'coins' };
             const targetKey = keyMap[fieldKey];
             if (!appData.sheets[activeDate].finalDeno) {
                 appData.sheets[activeDate].finalDeno = { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 };
@@ -1199,13 +1147,7 @@
             document.getElementById('calc-grand-val').textContent = '₹' + grandCollected.toLocaleString('en-IN');
 
             const finalDeno = currentSheet.finalDeno || {};
-            const finalTotalCash = (Number(finalDeno.c500 || 0) * 500) + 
-                                   (Number(finalDeno.c200 || 0) * 200) + 
-                                   (Number(finalDeno.c100 || 0) * 100) + 
-                                   (Number(finalDeno.c50 || 0) * 50) + 
-                                   (Number(finalDeno.c20 || 0) * 20) + 
-                                   (Number(finalDeno.c10 || 0) * 10) + 
-                                   (Number(finalDeno.coins || 0));
+            const finalTotalCash = (Number(finalDeno.c500 || 0) * 500) + (Number(finalDeno.c200 || 0) * 200) + (Number(finalDeno.c100 || 0) * 100) + (Number(finalDeno.c50 || 0) * 50) + (Number(finalDeno.c20 || 0) * 20) + (Number(finalDeno.c10 || 0) * 10) + (Number(finalDeno.coins || 0));
 
             document.getElementById('vfd-c500').textContent = '₹' + ((finalDeno.c500 || 0) * 500).toLocaleString('en-IN');
             document.getElementById('vfd-c200').textContent = '₹' + ((finalDeno.c200 || 0) * 200).toLocaleString('en-IN');
@@ -1228,11 +1170,11 @@
             if (diff === 0) {
                 statusElem.textContent = "Matched Exact";
                 statusElem.className = "status-pill status-match";
-                diffElem.style.color = "#15803d";
+                diffElem.style.color = "#34d399";
             } else {
                 statusElem.textContent = `Variance: ₹${diff}`;
                 statusElem.className = "status-pill status-mismatch";
-                diffElem.style.color = "#b91c1c";
+                diffElem.style.color = "#fca5a5";
             }
 
             renderPendingAssociatesList();
@@ -1240,12 +1182,8 @@
 
         document.getElementById('cashForm').addEventListener('submit', function(e) {
             e.preventDefault();
-
             const nameVal = document.getElementById('associateSelect').value;
-            if(!nameVal) {
-                alert("Please select an associate or add one via 'Manage Associates'.");
-                return;
-            }
+            if(!nameVal) { alert("Please select an associate or add one via 'Manage Associates'."); return; }
 
             const newRecord = {
                 id: Date.now(),
@@ -1261,9 +1199,7 @@
                 pending: Number(document.getElementById('pendingAmount').value) || 0
             };
 
-            if(!appData.sheets[activeDate]) {
-                appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
-            }
+            if(!appData.sheets[activeDate]) appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
 
             appData.sheets[activeDate].records.push(newRecord);
             
@@ -1305,7 +1241,7 @@
                     const importedData = JSON.parse(e.target.result);
                     if (importedData && importedData.sheets) {
                         appData = importedData;
-                        activeDate = importedData.activeDate || Object.keys(importedData.sheets)[0];
+                        activeDate = getLatestDate(importedData.sheets);
                         renderTabs();
                         renderAssociateDropdown();
                         renderSheetData();
