@@ -713,10 +713,15 @@
 
     <script>
         const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynh8ReggHPVdVxt6l_wiADo2R6m49BKBDVWm8Tggmg7vXs2w7jY2XDXXsnSX74Uhwryg/exec';
-
         const todayStr = new Date().toISOString().split('T')[0];
 
-        let appData = {
+        // 1. Initial State Recovery from Local Storage
+        let localStored = null;
+        try {
+            localStored = JSON.parse(localStorage.getItem('klzd_recon_data_v2'));
+        } catch(e) { localStored = null; }
+
+        let appData = (localStored && localStored.sheets) ? localStored : {
             activeDate: todayStr,
             associates: [],
             sheets: {
@@ -727,9 +732,10 @@
             }
         };
 
-        let activeDate = todayStr;
+        let activeDate = appData.activeDate || todayStr;
         let isSaving = false;
-        let isInitialLoaded = false;
+        let isCloudReady = false;
+        let lastSaveTimestamp = 0;
         let saveDebounceTimer = null;
 
         function getLatestDate(sheetsObj) {
@@ -739,62 +745,80 @@
             return keys[0];
         }
 
+        // Safe union merge to prevent dropping historical dates or associates
+        function mergeDatasets(local, remote) {
+            const mergedSheets = Object.assign({}, local.sheets || {}, remote.sheets || {});
+            const mergedAssoc = Array.from(new Set([...(local.associates || []), ...(remote.associates || [])])).sort();
+
+            return {
+                activeDate: remote.activeDate || local.activeDate || todayStr,
+                associates: mergedAssoc,
+                sheets: mergedSheets
+            };
+        }
+
         async function fetchLiveData() {
-            if (isSaving || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
+            // Block background fetch if currently saving, if saved within the last 6s, or if the user is typing in an input
+            if (isSaving || (Date.now() - lastSaveTimestamp < 6000) || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
                 return;
             }
-            
+
             try {
                 const response = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
                 const textData = await response.text();
                 let parsed = null;
-                
                 try { parsed = JSON.parse(textData); } catch(e) {}
 
-                if (parsed && typeof parsed === 'object' && parsed.sheets && Object.keys(parsed.sheets).length > 0) {
-                    appData = parsed;
-                    if (!isInitialLoaded) {
-                        activeDate = getLatestDate(appData.sheets);
-                        isInitialLoaded = true;
-                    } else if (!appData.sheets[activeDate]) {
-                        activeDate = getLatestDate(appData.sheets);
+                if (parsed && typeof parsed === 'object' && parsed.sheets) {
+                    const localCount = (appData.sheets[activeDate]?.records || []).length;
+                    const remoteCount = (parsed.sheets[activeDate]?.records || []).length;
+
+                    // If local has newer un-synced entries, push them instead of letting remote overwrite
+                    if (localCount > remoteCount && (Date.now() - lastSaveTimestamp < 30000)) {
+                        saveData();
+                        return;
+                    }
+
+                    appData = mergeDatasets(appData, parsed);
+                    localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
+                    
+                    if (!isCloudReady) {
+                        if (!appData.sheets[activeDate]) {
+                            activeDate = getLatestDate(appData.sheets);
+                        }
+                        isCloudReady = true;
                     }
 
                     renderTabs();
                     renderAssociateDropdown();
                     renderSheetData();
                     updateStatus('🟢 Live Synced', 'rgba(52, 211, 153, 0.12)', '#34d399');
-                } else {
-                    isInitialLoaded = true;
-                    renderTabs();
-                    renderAssociateDropdown();
-                    renderSheetData();
-                    updateStatus('🟢 Connected to Cloud', 'rgba(52, 211, 153, 0.12)', '#34d399');
                 }
             } catch (err) {
                 console.error("Fetch error:", err);
-                updateStatus('⚠️ Cloud Sync Error', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+                updateStatus('⚠️ Cloud Sync Pending', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             }
         }
 
         function debouncedSaveData() {
-            if (!isInitialLoaded) return;
-            updateStatus('⚡ Saving changes...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+            updateStatus('⚡ Storing local...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+            localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
+
             clearTimeout(saveDebounceTimer);
-            saveDebounceTimer = setTimeout(() => { saveData(); }, 500);
+            saveDebounceTimer = setTimeout(() => { saveData(); }, 600);
         }
 
         async function saveData() {
-            if (!isInitialLoaded) return;
             isSaving = true;
-            updateStatus('⚡ Syncing with Cloud...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
-            
+            lastSaveTimestamp = Date.now();
+            updateStatus('⚡ Syncing Cloud...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+
             try {
                 appData.activeDate = activeDate;
-                const payload = JSON.stringify(appData);
+                localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
 
                 const params = new URLSearchParams();
-                params.append('data', payload);
+                params.append('data', JSON.stringify(appData));
 
                 await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
@@ -802,13 +826,16 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: params.toString()
                 });
-                
+
                 updateStatus('🟢 Saved Live', 'rgba(52, 211, 153, 0.12)', '#34d399');
             } catch (err) {
                 console.error("Save error:", err);
-                updateStatus('❌ Save Failed', 'rgba(239, 68, 68, 0.12)', '#ef4444');
+                updateStatus('⚠️ Saved Locally Only', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             } finally {
-                isSaving = false;
+                // Keep the save lock active for 4 seconds so subsequent background polling does not grab stale cache
+                setTimeout(() => {
+                    isSaving = false;
+                }, 4000);
             }
         }
 
@@ -834,15 +861,16 @@
                 input.value = '';
                 renderAssociateList();
                 renderAssociateDropdown();
-                saveData();
+                debouncedSaveData();
             }
         }
 
         function deleteAssociate(name) {
+            if (!confirm(`Remove "${name}" from associate list?`)) return;
             appData.associates = appData.associates.filter(a => a !== name);
             renderAssociateList();
             renderAssociateDropdown();
-            saveData();
+            debouncedSaveData();
         }
 
         function renderAssociateList() {
@@ -867,7 +895,8 @@
             if (appData.associates) {
                 appData.associates.forEach(name => {
                     const opt = document.createElement('option');
-                    opt.value = name; opt.textContent = name;
+                    opt.value = name; 
+                    opt.textContent = name;
                     select.appendChild(opt);
                 });
             }
@@ -877,7 +906,7 @@
         function renderTabs() {
             const tabsContainer = document.getElementById('dateTabs');
             tabsContainer.innerHTML = '';
-            const sortedDates = Object.keys(appData.sheets).sort((a, b) => new Date(b) - new Date(a));
+            const sortedDates = Object.keys(appData.sheets || {}).sort((a, b) => new Date(b) - new Date(a));
 
             sortedDates.forEach(dateStr => {
                 const btn = document.createElement('button');
@@ -895,7 +924,7 @@
             activeDate = dateStr;
             renderTabs();
             renderSheetData();
-            saveData();
+            localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
         }
 
         function addNewDatePrompt() {
@@ -909,6 +938,7 @@
                     };
                 }
                 switchDate(cleanDate);
+                debouncedSaveData();
             }
         }
 
@@ -1180,7 +1210,8 @@
             renderPendingAssociatesList();
         }
 
-        document.getElementById('cashForm').addEventListener('submit', function(e) {
+        // Form submission with write-lock protection
+        document.getElementById('cashForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const nameVal = document.getElementById('associateSelect').value;
             if(!nameVal) { alert("Please select an associate or add one via 'Manage Associates'."); return; }
@@ -1199,10 +1230,13 @@
                 pending: Number(document.getElementById('pendingAmount').value) || 0
             };
 
-            if(!appData.sheets[activeDate]) appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
+            if(!appData.sheets[activeDate]) {
+                appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
+            }
 
             appData.sheets[activeDate].records.push(newRecord);
             
+            // Clear inputs
             document.getElementById('associateSelect').value = '';
             document.getElementById('rtsAmount').value = '';
             document.getElementById('c500').value = '0';
@@ -1215,13 +1249,14 @@
             document.getElementById('pendingAmount').value = '0';
 
             renderSheetData();
-            saveData();
+            await saveData();
         });
 
         function deleteRecord(index) {
+            if (!confirm("Delete this record?")) return;
             appData.sheets[activeDate].records.splice(index, 1);
             renderSheetData();
-            saveData();
+            debouncedSaveData();
         }
 
         function exportJSON() {
@@ -1240,12 +1275,12 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (importedData && importedData.sheets) {
-                        appData = importedData;
-                        activeDate = getLatestDate(importedData.sheets);
+                        appData = mergeDatasets(appData, importedData);
+                        activeDate = getLatestDate(appData.sheets);
                         renderTabs();
                         renderAssociateDropdown();
                         renderSheetData();
-                        saveData();
+                        debouncedSaveData();
                     } else {
                         alert("Invalid backup file format.");
                     }
@@ -1256,8 +1291,14 @@
             fileReader.readAsText(event.target.files[0]);
         }
 
+        // Render local storage on immediate load
+        renderTabs();
+        renderAssociateDropdown();
+        renderSheetData();
+
+        // Initial sync and background sync interval (every 15 seconds)
         fetchLiveData();
-        setInterval(fetchLiveData, 5000);
+        setInterval(fetchLiveData, 15000);
     </script>
 </body>
 </html>
