@@ -3,22 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cash Reconciliation sheet - KLZD (Live Sync)</title>
+    <title>Cash KLZD - 2026</title>
+    <!-- html2canvas for screenshot generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
+            /* Dark Mode Defaults */
             --primary: #f1f5f9;
-            --primary-accent: #3b82f6;
+            --primary-accent: #ef4444; 
             --bg: #182232;
             --card-bg: #222f46;
             --card-hover: #2b3b57;
             --border: #33435e;
+            --cell-border: rgba(51, 67, 94, 0.7);
             --text: #e2e8f0;
             --text-muted: #94a3b8;
+            
             --danger-bg: #4c1d1d;
-            --danger-text: #fca5a5;
+            --danger-text: #ef4444;
             --danger-border: #7f1d1d;
+            
             --success-bg: #064e3b;
-            --success-text: #6ee7b7;
+            --success-text: #10b981;
+            
+            --input-bg: #182232;
+            --input-text: #ffffff;
+            --th-bg: #182232;
+            --th-text: #f8fafc;
+            --row-even: #222f46;
+            --row-odd: #1c273b;
+            --cashier-bg: #1e293b;
+        }
+
+        body.light-mode {
+            /* Light Mode Overrides */
+            --primary: #111827;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --card-hover: #f9fafb;
+            --border: #d1d5db;
+            --cell-border: #e5e7eb;
+            --text: #1f2937;
+            --text-muted: #4b5563;
+            
+            --danger-bg: #fee2e2;
+            --danger-text: #b91c1c;
+            --danger-border: #f87171;
+            
+            --success-bg: #d1fae5;
+            --success-text: #047857;
+            
+            --input-bg: #ffffff;
+            --input-text: #111827;
+            --th-bg: #111827;
+            --th-text: #ffffff;
+            --row-even: #ffffff;
+            --row-odd: #f9fafb;
+            --cashier-bg: #e2e8f0;
         }
 
         body {
@@ -27,6 +68,17 @@
             color: var(--text);
             margin: 0;
             padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Remove Number Input Arrows (Spinners) */
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
         }
 
         .header {
@@ -36,6 +88,7 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 12px;
+            width: 100%;
         }
 
         .header h1 {
@@ -49,6 +102,8 @@
             gap: 10px;
             align-items: center;
             flex-wrap: wrap;
+            flex: 1;
+            justify-content: flex-end;
         }
 
         .save-indicator {
@@ -80,14 +135,18 @@
         }
 
         .btn:hover { background-color: #1d4ed8; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-secondary { background-color: #334155; color: #f8fafc; }
         .btn-secondary:hover { background-color: #475569; }
+
+        body.light-mode .btn-secondary { background-color: #64748b; }
+        body.light-mode .btn-secondary:hover { background-color: #475569; }
 
         .tabs-bar-wrapper {
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #1e293b;
+            background: var(--card-bg);
             border: 1px solid var(--border);
             padding: 6px;
             border-radius: 8px;
@@ -116,20 +175,20 @@
         }
 
         .tab-btn.active {
-            background: var(--card-bg);
-            color: #60a5fa;
+            background: var(--bg);
+            color: #3b82f6;
             border-color: var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .add-date-btn {
-            background: var(--card-bg);
+            background: var(--bg);
             border: 1px dashed #3b82f6;
             padding: 8px 14px;
             border-radius: 6px;
             font-size: 13px;
             font-weight: 700;
-            color: #60a5fa;
+            color: #3b82f6;
             cursor: pointer;
             white-space: nowrap;
             flex-shrink: 0;
@@ -138,6 +197,26 @@
 
         .add-date-btn:hover { 
             background: #2563eb; 
+            color: #ffffff;
+        }
+
+        .delete-sheet-btn {
+            background: var(--danger-bg);
+            border: 1px dashed var(--danger-border);
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--danger-text);
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+
+        .delete-sheet-btn:hover {
+            background: var(--danger-text);
             color: #ffffff;
         }
 
@@ -153,7 +232,7 @@
             padding: 16px;
             border-radius: 10px;
             border: 1px solid var(--border);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .card-title {
@@ -168,7 +247,7 @@
             font-size: 22px;
             font-weight: 700;
             margin-top: 6px;
-            color: #ffffff;
+            color: var(--primary);
         }
 
         .section-card {
@@ -181,7 +260,7 @@
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
             gap: 10px;
             align-items: end;
         }
@@ -204,13 +283,45 @@
             border-radius: 6px;
             font-size: 13px;
             outline: none;
-            background-color: #182232;
-            color: #ffffff;
+            background-color: var(--input-bg);
+            color: var(--input-text);
+        }
+
+        .form-group input[type="number"] {
+            text-align: center;
+            font-weight: 600;
         }
 
         .form-group input:focus, .form-group select:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+        }
+
+        .live-balance-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 33px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 0 8px;
+            white-space: nowrap;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .live-balance-box.match {
+            background: rgba(6, 78, 59, 0.4);
+            border-color: #059669;
+            color: #10b981;
+        }
+
+        .live-balance-box.shortage {
+            background: rgba(76, 29, 29, 0.4);
+            border-color: #dc2626;
+            color: #ef4444;
         }
 
         .table-container {
@@ -220,14 +331,13 @@
             overflow-x: auto;
             max-height: 480px;
             overflow-y: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             margin-bottom: 24px;
         }
 
         table {
             width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
             font-size: 13px;
             text-align: center;
         }
@@ -236,23 +346,28 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            background-color: #182232;
-            color: #f8fafc;
-            padding: 12px 6px;
-            font-weight: 600;
+            background-color: var(--th-bg);
+            color: var(--th-text);
+            padding: 14px 8px;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             white-space: nowrap;
+            border: 1px solid var(--border);
             border-bottom: 2px solid var(--border);
         }
 
         td {
-            padding: 8px 6px;
-            border-bottom: 1px solid var(--border);
+            padding: 8px;
+            border: 1px solid var(--cell-border);
             white-space: nowrap;
-            color: #e2e8f0;
+            color: var(--primary);
+            vertical-align: middle;
         }
 
-        tbody tr:nth-child(even) { background-color: #222f46; }
-        tbody tr:nth-child(odd) { background-color: #1c273b; }
+        tbody tr:nth-child(even) { background-color: var(--row-even); }
+        tbody tr:nth-child(odd) { background-color: var(--row-odd); }
         tbody tr:hover { background-color: var(--card-hover); }
 
         .sno-cell {
@@ -260,59 +375,67 @@
             color: var(--text-muted);
             width: 35px;
             text-align: center;
+            border-left: 1px solid var(--border);
         }
 
         .editable-input {
-            width: 55px;
+            width: 100%;
             text-align: center;
             border: 1px solid transparent;
             background: transparent;
-            padding: 5px;
+            padding: 6px 4px;
             font-size: 13px;
             border-radius: 4px;
-            color: #ffffff;
+            color: var(--input-text);
+            box-sizing: border-box;
+            transition: all 0.15s;
         }
 
         .editable-input:hover {
             border-color: var(--border);
-            background-color: #182232;
+            background-color: var(--input-bg);
         }
 
         .editable-input:focus {
             border-color: var(--primary-accent);
-            background-color: #182232;
+            background-color: var(--input-bg);
             outline: none;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
         }
 
-        .editable-name { width: 130px; text-align: left; font-weight: 600; }
-        .editable-rts { width: 75px; text-align: right; font-weight: 600; }
-        .editable-pending { width: 65px; text-align: right; font-weight: 600; color: #fca5a5; }
+        .editable-name { width: 100%; text-align: left; font-weight: 600; }
+        .editable-rts { width: 100%; text-align: center; font-weight: 600; }
+        .editable-pending { width: 100%; text-align: center; font-weight: 600; color: var(--danger-text); }
 
         .badge-shortage {
             background-color: var(--danger-bg);
-            color: var(--danger-text);
+            color: #ef4444;
             border: 1px solid var(--danger-border);
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
         }
 
         .badge-exact {
             background-color: var(--success-bg);
-            color: var(--success-text);
+            color: #10b981;
             font-weight: 700;
-            padding: 2px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
         }
 
         .delete-btn {
-            color: #f87171;
+            color: var(--danger-text);
             background: none;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            font-size: 15px;
+            font-size: 16px;
+            transition: transform 0.1s;
+        }
+        
+        .delete-btn:hover {
+            transform: scale(1.15);
         }
 
         .vertical-layout {
@@ -327,7 +450,7 @@
             border-radius: 10px;
             border: 1px solid var(--border);
             padding: 18px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .deno-card h3 {
@@ -344,8 +467,8 @@
             width: 70px;
             text-align: center;
             border: 1px solid var(--border);
-            background: #182232;
-            color: #ffffff;
+            background: var(--input-bg);
+            color: var(--input-text);
             padding: 6px;
             border-radius: 4px;
             font-weight: 600;
@@ -357,8 +480,8 @@
             border-radius: 12px;
             font-weight: 700;
         }
-        .status-match { background: #064e3b; color: #6ee7b7; }
-        .status-mismatch { background: #7f1d1d; color: #fca5a5; }
+        .status-match { background: var(--success-bg); color: var(--success-text); }
+        .status-mismatch { background: var(--danger-bg); color: var(--danger-text); }
 
         .modal-overlay {
             position: fixed;
@@ -370,12 +493,13 @@
             z-index: 1000;
         }
 
+        /* Widened modal for Master Database */
         .modal-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             color: var(--text);
-            width: 90%;
-            max-width: 450px;
+            width: 95%;
+            max-width: 750px;
             border-radius: 10px;
             padding: 20px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
@@ -384,7 +508,7 @@
         .modal-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 16px;
         }
 
@@ -397,26 +521,6 @@
             cursor: pointer;
             color: var(--text-muted);
         }
-
-        .associate-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            margin-top: 12px;
-            background: #182232;
-        }
-
-        .associate-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-        }
-
-        .associate-item:last-child { border-bottom: none; }
 
         .final-deno-grid {
             display: grid;
@@ -432,15 +536,16 @@
 
         .v-deno-table th, .v-deno-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid var(--border);
+            border: 1px solid var(--cell-border);
             font-size: 13px;
         }
 
         .v-deno-table th {
             position: static;
-            background-color: #182232;
-            color: var(--text-muted);
+            background-color: var(--th-bg);
+            color: var(--th-text);
             text-align: left;
+            border: 1px solid var(--border);
             border-bottom: 2px solid var(--border);
         }
 
@@ -452,39 +557,86 @@
 
         .pending-list-table th {
             position: static;
-            background-color: #4c1d1d;
-            color: #fca5a5;
+            background-color: var(--danger-bg);
+            color: var(--danger-text);
             text-align: left;
             padding: 8px 12px;
-            border-bottom: 2px solid #7f1d1d;
+            border: 1px solid var(--danger-border);
+            border-bottom: 2px solid var(--danger-border);
         }
 
         .pending-list-table td {
             padding: 8px 12px;
-            border-bottom: 1px solid #4c1d1d;
+            border: 1px solid var(--danger-border);
         }
+
+        .cashier-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            padding: 6px 14px;
+            background: var(--cashier-bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-left: auto;
+        }
+        
+        .db-action-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 6px;
+        }
+        .db-action-btn.edit {
+            color: #3b82f6;
+        }
+        .db-action-btn.edit:hover { text-decoration: underline; }
+        .db-action-btn.delete {
+            color: #ef4444;
+        }
+        .db-action-btn.delete:hover { text-decoration: underline; }
+
     </style>
 </head>
 <body>
 
     <div class="header">
         <div>
-            <h1>Cash Reconciliation sheet - KLZD</h1>
+            <h1>Cash KLZD - 2026</h1>
             <p style="color: var(--text-muted); margin: 4px 0 0 0; font-size: 13px;">Manage multi-day collections, associate entries, and end-of-day physical cash verification.</p>
         </div>
         <div class="header-actions">
-            <div id="saveStatus" class="save-indicator">🔄 Fetching Cloud Data...</div>
+            <button class="btn btn-secondary" onclick="toggleTheme()">🌓 Theme</button>
+            <button id="undoBtn" class="btn btn-secondary" onclick="undoAction()" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+            <button id="redoBtn" class="btn btn-secondary" onclick="redoAction()" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+            
+            <div id="saveStatus" class="save-indicator">🟢 Local Ready</div>
             <button class="btn btn-secondary" onclick="openAssociateModal()">👥 Manage Associates</button>
             <button class="btn btn-secondary" onclick="exportJSON()">📥 Export Backup</button>
             <label class="btn btn-secondary" style="margin: 0; cursor: pointer;">
                 📤 Import Backup <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
             </label>
+            
+            <div id="cashierDisplay" class="cashier-badge">
+                <span style="color: var(--text-muted); font-size: 12px; font-weight: 600;">Cashier Name :</span>
+                <span id="cashierNameText" style="font-weight: 700; margin-left: 2px;"></span> 
+                <svg viewBox="0 0 24 24" width="18" height="18" style="margin-left: 2px; vertical-align: middle;">
+                    <path fill="#10b981" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"></path>
+                    <path fill="#ffffff" d="M10 17l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"></path>
+                </svg>
+            </div>
         </div>
     </div>
 
     <div class="tabs-bar-wrapper">
-        <button class="add-date-btn" onclick="addNewDatePrompt()">+ New Date Sheet</button>
+        <button class="add-date-btn" onclick="openNewSheetModal()">+ New Date Sheet</button>
         <div class="tabs-container" id="dateTabs"></div>
+        <button class="delete-sheet-btn" onclick="deleteCurrentSheet()" title="Delete Current Date Sheet">🗑️ Delete Sheet</button>
     </div>
 
     <div class="summary-grid">
@@ -497,17 +649,17 @@
             <div class="card-value" id="sum-collected">₹0</div>
         </div>
         <div class="card">
-            <div class="card-title" style="color: #fca5a5;">Total Pending</div>
-            <div class="card-value" style="color: #fca5a5;" id="sum-pending">₹0</div>
+            <div class="card-title" style="color: var(--danger-text);">Total Pending</div>
+            <div class="card-value" style="color: var(--danger-text);" id="sum-pending">₹0</div>
         </div>
         <div class="card">
             <div class="card-title">Vault / Final Physical Cash</div>
-            <div class="card-value" id="sum-final-cash" style="color: #60a5fa;">₹0</div>
+            <div class="card-value" id="sum-final-cash" style="color: #3b82f6;">₹0</div>
         </div>
     </div>
 
     <div class="section-card">
-        <h3 style="margin-top:0; margin-bottom: 12px; font-size: 15px; color: var(--primary);">Add Collection Entry for <span id="currentDateDisplay" style="color: #60a5fa;"></span></h3>
+        <h3 style="margin-top:0; margin-bottom: 12px; font-size: 15px; color: var(--primary);">Add Collection Entry for <span id="currentDateDisplay" style="color: #3b82f6;"></span></h3>
         <form id="cashForm" class="form-grid">
             <div class="form-group" style="grid-column: span 2;">
                 <label>Associate Name</label>
@@ -517,15 +669,21 @@
             </div>
             <div class="form-group">
                 <label>RTS (₹)</label>
-                <input type="number" id="rtsAmount" min="0" placeholder="0" required>
+                <input type="number" id="rtsAmount" min="0" placeholder="0" oninput="calculateLiveEntryBalance()" required>
             </div>
-            <div class="form-group"><label>₹500</label><input type="number" id="c500" value="0"></div>
-            <div class="form-group"><label>₹200</label><input type="number" id="c200" value="0"></div>
-            <div class="form-group"><label>₹100</label><input type="number" id="c100" value="0"></div>
-            <div class="form-group"><label>₹50</label><input type="number" id="c50" value="0"></div>
-            <div class="form-group"><label>₹20</label><input type="number" id="c20" value="0"></div>
-            <div class="form-group"><label>₹10</label><input type="number" id="c10" value="0"></div>
-            <div class="form-group"><label>Coins (₹)</label><input type="number" id="coins" value="0"></div>
+            <div class="form-group"><label>₹500</label><input type="number" id="c500" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>₹200</label><input type="number" id="c200" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>₹100</label><input type="number" id="c100" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>₹50</label><input type="number" id="c50" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>₹20</label><input type="number" id="c20" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>₹10</label><input type="number" id="c10" value="0" oninput="calculateLiveEntryBalance()"></div>
+            <div class="form-group"><label>Coins (₹)</label><input type="number" id="coins" value="0" oninput="calculateLiveEntryBalance()"></div>
+            
+            <div class="form-group">
+                <label>Live Balance</label>
+                <div id="liveBalanceAmount" class="live-balance-box">₹0</div>
+            </div>
+
             <div class="form-group"><label>Pending (₹)</label><input type="number" id="pendingAmount" value="0"></div>
             <button type="submit" class="btn btn-primary" style="height: 33px;">+ Add Entry</button>
         </form>
@@ -535,20 +693,20 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 40px;">S.No</th>
-                    <th style="text-align: left; padding-left: 12px;">Associate</th>
-                    <th>RTS Amount</th>
-                    <th>500</th>
-                    <th>200</th>
-                    <th>100</th>
-                    <th>50</th>
-                    <th>20</th>
-                    <th>10</th>
-                    <th>Coins</th>
-                    <th>Total Collected</th>
-                    <th>Balance</th>
-                    <th>Pending</th>
-                    <th>Action</th>
+                    <th style="width: 35px;">#</th>
+                    <th style="text-align: left; padding-left: 12px; width: 170px;">Associate Name</th>
+                    <th style="text-align: center; width: 90px;">RTS (₹)</th>
+                    <th style="text-align: center; width: 60px;">500</th>
+                    <th style="text-align: center; width: 60px;">200</th>
+                    <th style="text-align: center; width: 60px;">100</th>
+                    <th style="text-align: center; width: 60px;">50</th>
+                    <th style="text-align: center; width: 60px;">20</th>
+                    <th style="text-align: center; width: 60px;">10</th>
+                    <th style="text-align: center; width: 60px;">Coins</th>
+                    <th style="text-align: center; width: 100px;">Collected</th>
+                    <th style="text-align: center; width: 80px;">Balance</th>
+                    <th style="text-align: center; width: 80px;">Pending (₹)</th>
+                    <th style="text-align: center; width: 40px;">Del</th>
                 </tr>
             </thead>
             <tbody id="cashTableBody"></tbody>
@@ -562,63 +720,63 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Denomination</th>
-                            <th>500</th>
-                            <th>200</th>
-                            <th>100</th>
-                            <th>50</th>
-                            <th>20</th>
-                            <th>10</th>
-                            <th>Coins</th>
-                            <th>Aggregated RTS Total</th>
-                            <th>Calculated Cash Total</th>
+                            <th style="text-align: left;">Denomination</th>
+                            <th style="text-align: center;">500</th>
+                            <th style="text-align: center;">200</th>
+                            <th style="text-align: center;">100</th>
+                            <th style="text-align: center;">50</th>
+                            <th style="text-align: center;">20</th>
+                            <th style="text-align: center;">10</th>
+                            <th style="text-align: center;">Coins</th>
+                            <th style="text-align: center;">Aggregated RTS Total</th>
+                            <th style="text-align: center;">Calculated Cash Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td><strong>Notes Count</strong></td>
-                            <td id="calc-c500">0</td>
-                            <td id="calc-c200">0</td>
-                            <td id="calc-c100">0</td>
-                            <td id="calc-c50">0</td>
-                            <td id="calc-c20">0</td>
-                            <td id="calc-c10">0</td>
-                            <td id="calc-coins">₹0</td>
-                            <td rowspan="2" id="calc-rts-total" style="font-size: 15px; font-weight: bold; color: var(--text-muted);">₹0</td>
-                            <td rowspan="2" id="calc-grand-val" style="font-size: 15px; font-weight: bold; color: #60a5fa;">₹0</td>
+                            <td style="text-align: left;"><strong>Notes Count</strong></td>
+                            <td style="text-align: center;" id="calc-c500">0</td>
+                            <td style="text-align: center;" id="calc-c200">0</td>
+                            <td style="text-align: center;" id="calc-c100">0</td>
+                            <td style="text-align: center;" id="calc-c50">0</td>
+                            <td style="text-align: center;" id="calc-c20">0</td>
+                            <td style="text-align: center;" id="calc-c10">0</td>
+                            <td style="text-align: center;" id="calc-coins">₹0</td>
+                            <td rowspan="2" style="text-align: center;" id="calc-rts-total" style="font-size: 15px; font-weight: bold; color: var(--text-muted);">₹0</td>
+                            <td rowspan="2" style="text-align: center;" id="calc-grand-val" style="font-size: 15px; font-weight: bold; color: #3b82f6;">₹0</td>
                         </tr>
                         <tr>
-                            <td><strong>Value (₹)</strong></td>
-                            <td id="vcalc-c500">₹0</td>
-                            <td id="vcalc-c200">₹0</td>
-                            <td id="vcalc-c100">₹0</td>
-                            <td id="vcalc-c50">₹0</td>
-                            <td id="vcalc-c20">₹0</td>
-                            <td id="vcalc-c10">₹0</td>
-                            <td id="vcalc-coins">₹0</td>
+                            <td style="text-align: left;"><strong>Value (₹)</strong></td>
+                            <td style="text-align: center;" id="vcalc-c500">₹0</td>
+                            <td style="text-align: center;" id="vcalc-c200">₹0</td>
+                            <td style="text-align: center;" id="vcalc-c100">₹0</td>
+                            <td style="text-align: center;" id="vcalc-c50">₹0</td>
+                            <td style="text-align: center;" id="vcalc-c20">₹0</td>
+                            <td style="text-align: center;" id="vcalc-c10">₹0</td>
+                            <td style="text-align: center;" id="vcalc-coins">₹0</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="deno-card" style="border-color: #3b82f6;">
+        <div id="finalDenoSection" class="deno-card" style="border-color: #3b82f6;">
             <h3>
                 <span>Final Deno Sheet (Physical Vault Count)</span>
                 <span id="reconcileStatus" class="status-pill status-match">Matched</span>
             </h3>
             
-            <div style="background: #182232; border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px;">
+            <div style="background: var(--bg); border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 16px; display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 13px;">
                 <div>
                     <strong>Final Deno RTS Amount:</strong> 
-                    ₹<input type="number" id="fdRtsAmount" class="final-input" style="width: 90px;" value="0" oninput="updateFinalDenoRts(this.value)">
+                    ₹<input type="number" id="fdRtsAmount" class="final-input" style="width: 90px; background: var(--input-bg);" value="0" oninput="updateFinalDenoRts(this.value)">
                 </div>
-                <div>Sum of Pending: <strong id="fd-total-pending" style="color: #fca5a5;">₹0</strong></div>
+                <div>Sum of Pending: <strong id="fd-total-pending" style="color: var(--danger-text);">₹0</strong></div>
                 <div>Diff (Variance): <strong id="fdDiffVal">₹0</strong></div>
             </div>
 
             <div class="final-deno-grid">
-                <div style="background: #182232; border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+                <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
                     <h4 style="margin-top: 0; margin-bottom: 10px; color: var(--primary); font-size: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">💵 Physical Vault Count</h4>
                     <table class="v-deno-table">
                         <thead>
@@ -666,16 +824,22 @@
                             </tr>
                         </tbody>
                         <tfoot>
-                            <tr style="background: #222f46; font-weight: bold;">
-                                <td colspan="2" style="padding: 10px 12px;">Final Physical Cash:</td>
-                                <td style="text-align: right; font-size: 15px; color: #34d399; padding: 10px 12px;" id="final-grand-val">₹0</td>
+                            <tr style="background: var(--card-bg); font-weight: bold;">
+                                <td colspan="2" style="padding: 10px 12px; border: 1px solid var(--cell-border);">Final Physical Cash:</td>
+                                <td style="text-align: right; font-size: 15px; color: var(--success-text); padding: 10px 12px; border: 1px solid var(--cell-border);" id="final-grand-val">₹0</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
 
-                <div style="background: #182232; border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
-                    <h4 style="margin-top: 0; margin-bottom: 10px; color: #fca5a5; font-size: 14px; border-bottom: 1px solid #7f1d1d; padding-bottom: 6px;">📋 Pending Amounts by Associate</h4>
+                <div style="background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--danger-border); padding-bottom: 6px; margin-bottom: 10px;">
+                        <h4 style="margin: 0; color: var(--danger-text); font-size: 14px;">📋 Pending Amounts by Associate</h4>
+                        <div style="display: flex; gap: 8px;" class="no-capture">
+                            <button type="button" class="btn" style="background-color: #3b82f6; color: white; padding: 4px 8px; font-size: 11px; height: auto;" onclick="copyScreenshot()">📸 Copy Screenshot</button>
+                            <button type="button" class="btn" style="background-color: #25D366; color: white; padding: 4px 8px; font-size: 11px; height: auto;" onclick="sharePendingWhatsApp()">📱 Share via WhatsApp</button>
+                        </div>
+                    </div>
                     <table class="pending-list-table">
                         <thead>
                             <tr>
@@ -685,9 +849,9 @@
                         </thead>
                         <tbody id="associatePendingTableBody"></tbody>
                         <tfoot>
-                            <tr style="font-weight: bold; background-color: #4c1d1d;">
-                                <td style="padding: 10px 12px; color: #fca5a5;">Total Pending:</td>
-                                <td style="text-align: right; padding: 10px 12px; color: #fca5a5; font-size: 15px;" id="side-total-pending">₹0</td>
+                            <tr style="font-weight: bold;">
+                                <td style="padding: 10px 12px; border: 1px solid var(--danger-border);">Total Pending:</td>
+                                <td style="text-align: right; padding: 10px 12px; font-size: 15px; border: 1px solid var(--danger-border);" id="side-total-pending">₹0</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -696,47 +860,184 @@
         </div>
     </div>
 
-    <!-- Associate Modal -->
-    <div id="associateModal" class="modal-overlay">
-        <div class="modal-card">
+    <!-- New Sheet Modal -->
+    <div id="newSheetModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 400px;">
             <div class="modal-header">
-                <h3>Manage Saved Associates</h3>
+                <h3>Create New Date Sheet</h3>
+                <button class="close-modal" onclick="closeNewSheetModal()">✕</button>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>Date (YYYY-MM-DD)</label>
+                <input type="date" id="newSheetDateInput" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>Cashier Name (Optional)</label>
+                <input type="text" id="newSheetCashierInput" placeholder="Enter Cashier Name" style="width: 100%; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button class="btn btn-secondary" onclick="closeNewSheetModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmNewSheet()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Associate Master Database Modal -->
+    <div id="associateModal" class="modal-overlay">
+        <div class="modal-card" style="max-width: 750px; width: 95%;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="display: flex; align-items: center; gap: 8px;">⚙️ Associate Master Database (VLOOKUP)</h3>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;">Add, edit, or remove Associate mappings (Driver ID, Name, Facility ID, Type).</p>
+                </div>
                 <button class="close-modal" onclick="closeAssociateModal()">✕</button>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="newAssociateInput" placeholder="Enter associate full name" style="flex:1; padding:7px; border: 1px solid var(--border); background: #182232; color: #fff; border-radius: 6px;">
-                <button class="btn btn-primary" onclick="addAssociate()">Add</button>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="assocDriverId" placeholder="Driver ID (e.g. DRV101)" class="form-group" style="padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background-color: var(--input-bg); color: var(--input-text);">
+                <input type="text" id="assocName" placeholder="Associate Name (e.g. Rahul)" class="form-group" style="padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background-color: var(--input-bg); color: var(--input-text);">
+                <input type="text" id="assocFacilityId" placeholder="Facility ID (e.g. FAC502)" class="form-group" style="padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background-color: var(--input-bg); color: var(--input-text);">
+                <select id="assocType" class="form-group" style="padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; outline: none; background-color: var(--input-bg); color: var(--input-text);">
+                    <option value="NDA-Bike">NDA-Bike</option>
+                    <option value="NDA-Van">NDA-Van</option>
+                    <option value="Other">Other</option>
+                </select>
             </div>
-            <div class="associate-list" id="associateListContainer"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <span style="font-size: 11px; color: var(--text-muted); font-style: italic;">Tip: Entering an existing Driver ID will edit/update its record.</span>
+                <button class="btn" style="background-color: #059669; color: white;" onclick="saveAssociate()">+ Save / Update Mapping</button>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; color: var(--text-muted);">
+                <span id="assocCountDisplay" style="font-weight: 600;">0 Driver Mappings Saved</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;" onclick="exportAssocMapping()">Export Mapping JSON</button>
+                    <label class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px; margin: 0; cursor: pointer;">
+                        Import Mapping JSON <input type="file" accept=".json" style="display:none" onchange="importAssocMapping(event)">
+                    </label>
+                </div>
+            </div>
+            
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; background: var(--bg);">
+                <table class="v-deno-table">
+                    <thead>
+                        <tr>
+                            <th>Driver ID</th>
+                            <th>Associate Name</th>
+                            <th>Facility ID</th>
+                            <th>Type</th>
+                            <th style="text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assocDbTableBody"></tbody>
+                </table>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+                <button class="btn btn-secondary" onclick="closeAssociateModal()">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbynh8ReggHPVdVxt6l_wiADo2R6m49BKBDVWm8Tggmg7vXs2w7jY2XDXXsnSX74Uhwryg/exec';
+        const LOCAL_STORAGE_KEY = 'cash_klzd_2026_data';
+        
+        // --- GOOGLE APPS SCRIPT WEB APP URL ---
+        const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-C2uopjrdJtsYzH7BGNl9WKv2pAJ6Qi91r-9ub1rutmVFyMvvSTE0h55V1uPX0CSg/exec'; 
+        // -------------------------------------------------------
+        
+        const THEME_STORAGE_KEY = 'cash_klzd_theme';
+
         const todayStr = new Date().toISOString().split('T')[0];
 
-        // 1. Initial State Recovery from Local Storage
-        let localStored = null;
-        try {
-            localStored = JSON.parse(localStorage.getItem('klzd_recon_data_v2'));
-        } catch(e) { localStored = null; }
-
-        let appData = (localStored && localStored.sheets) ? localStored : {
+        let appData = {
             activeDate: todayStr,
             associates: [],
             sheets: {
                 [todayStr]: {
+                    cashier: "",
                     records: [],
                     finalDeno: { rts: null, c500: 0, c200: 0, c100: 0, c50: 0, c20: 0, c10: 0, coins: 0 }
                 }
             }
         };
 
-        let activeDate = appData.activeDate || todayStr;
+        let activeDate = todayStr;
         let isSaving = false;
-        let isCloudReady = false;
-        let lastSaveTimestamp = 0;
         let saveDebounceTimer = null;
+
+        const undoStack = [];
+        const redoStack = [];
+        const MAX_HISTORY = 40;
+
+        // Init Theme
+        if (localStorage.getItem(THEME_STORAGE_KEY) === 'light') {
+            document.body.classList.add('light-mode');
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLight = document.body.classList.contains('light-mode');
+            localStorage.setItem(THEME_STORAGE_KEY, isLight ? 'light' : 'dark');
+        }
+
+        function cloneState(data) {
+            return JSON.parse(JSON.stringify(data));
+        }
+
+        function recordState() {
+            undoStack.push(cloneState(appData));
+            if (undoStack.length > MAX_HISTORY) undoStack.shift();
+            redoStack.length = 0;
+            updateUndoRedoButtons();
+        }
+
+        function undoAction() {
+            if (undoStack.length === 0) return;
+            redoStack.push(cloneState(appData));
+            appData = undoStack.pop();
+            activeDate = appData.activeDate || getLatestDate(appData.sheets);
+            renderTabs();
+            renderAssociateDropdown();
+            renderSheetData();
+            persistLocal();
+            updateUndoRedoButtons();
+        }
+
+        function redoAction() {
+            if (redoStack.length === 0) return;
+            undoStack.push(cloneState(appData));
+            appData = redoStack.pop();
+            activeDate = appData.activeDate || getLatestDate(appData.sheets);
+            renderTabs();
+            renderAssociateDropdown();
+            renderSheetData();
+            persistLocal();
+            updateUndoRedoButtons();
+        }
+
+        function updateUndoRedoButtons() {
+            const uBtn = document.getElementById('undoBtn');
+            const rBtn = document.getElementById('redoBtn');
+            if (uBtn) uBtn.disabled = (undoStack.length === 0);
+            if (rBtn) rBtn.disabled = (redoStack.length === 0);
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+                if (e.shiftKey) {
+                    e.preventDefault();
+                    redoAction();
+                } else {
+                    e.preventDefault();
+                    undoAction();
+                }
+            } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+                e.preventDefault();
+                redoAction();
+            }
+        });
 
         function getLatestDate(sheetsObj) {
             const keys = Object.keys(sheetsObj || {});
@@ -745,80 +1046,121 @@
             return keys[0];
         }
 
-        // Safe union merge to prevent dropping historical dates or associates
-        function mergeDatasets(local, remote) {
-            const mergedSheets = Object.assign({}, local.sheets || {}, remote.sheets || {});
-            const mergedAssoc = Array.from(new Set([...(local.associates || []), ...(remote.associates || [])])).sort();
+        function persistLocal() {
+            try {
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+            } catch (e) {
+                console.error("Local save error:", e);
+            }
+        }
 
-            return {
-                activeDate: remote.activeDate || local.activeDate || todayStr,
-                associates: mergedAssoc,
-                sheets: mergedSheets
-            };
+        function migrateAssociates() {
+            if (appData.associates && appData.associates.length > 0 && typeof appData.associates[0] === 'string') {
+                appData.associates = appData.associates.map((name, i) => ({
+                    driverId: 'DRV' + (1000 + i),
+                    name: name,
+                    facilityId: 'KLZD00000',
+                    type: 'NDA-Bike'
+                }));
+            }
+        }
+
+        function loadLocalData() {
+            const cached = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (cached) {
+                try {
+                    const parsed = JSON.parse(cached);
+                    if (parsed && parsed.sheets && Object.keys(parsed.sheets).length > 0) {
+                        appData = parsed;
+                        migrateAssociates();
+                        activeDate = appData.activeDate || getLatestDate(appData.sheets);
+                    }
+                } catch (e) {}
+            }
+        }
+
+        function calculateLiveEntryBalance() {
+            const rts = Number(document.getElementById('rtsAmount').value) || 0;
+            const c500 = Number(document.getElementById('c500').value) || 0;
+            const c200 = Number(document.getElementById('c200').value) || 0;
+            const c100 = Number(document.getElementById('c100').value) || 0;
+            const c50 = Number(document.getElementById('c50').value) || 0;
+            const c20 = Number(document.getElementById('c20').value) || 0;
+            const c10 = Number(document.getElementById('c10').value) || 0;
+            const coins = Number(document.getElementById('coins').value) || 0;
+
+            const totalEntered = (c500 * 500) + (c200 * 200) + (c100 * 100) + (c50 * 50) + (c20 * 20) + (c10 * 10) + coins;
+            const liveBal = totalEntered - rts;
+
+            const liveBalElem = document.getElementById('liveBalanceAmount');
+            liveBalElem.textContent = (liveBal >= 0 ? '+' : '') + '₹' + liveBal.toLocaleString('en-IN');
+
+            if (liveBal === 0) {
+                liveBalElem.className = 'live-balance-box match';
+            } else if (liveBal < 0) {
+                liveBalElem.className = 'live-balance-box shortage';
+            } else {
+                liveBalElem.className = 'live-balance-box match';
+            }
         }
 
         async function fetchLiveData() {
-            // Block background fetch if currently saving, if saved within the last 6s, or if the user is typing in an input
-            if (isSaving || (Date.now() - lastSaveTimestamp < 6000) || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
+            if (!GOOGLE_APP_SCRIPT_URL) return;
+            if (isSaving || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
                 return;
             }
-
+            
             try {
                 const response = await fetch(GOOGLE_APP_SCRIPT_URL, { method: 'GET', redirect: 'follow' });
                 const textData = await response.text();
                 let parsed = null;
                 try { parsed = JSON.parse(textData); } catch(e) {}
 
-                if (parsed && typeof parsed === 'object' && parsed.sheets) {
-                    const localCount = (appData.sheets[activeDate]?.records || []).length;
-                    const remoteCount = (parsed.sheets[activeDate]?.records || []).length;
-
-                    // If local has newer un-synced entries, push them instead of letting remote overwrite
-                    if (localCount > remoteCount && (Date.now() - lastSaveTimestamp < 30000)) {
-                        saveData();
+                if (parsed && typeof parsed === 'object') {
+                    if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
                         return;
                     }
-
-                    appData = mergeDatasets(appData, parsed);
-                    localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
-                    
-                    if (!isCloudReady) {
-                        if (!appData.sheets[activeDate]) {
-                            activeDate = getLatestDate(appData.sheets);
-                        }
-                        isCloudReady = true;
+                    if (parsed.sheets && Object.keys(parsed.sheets).length > 0) {
+                        appData.sheets = parsed.sheets;
+                    }
+                    if (Array.isArray(parsed.associates)) {
+                        appData.associates = parsed.associates;
+                    }
+                    migrateAssociates();
+                    if (!appData.sheets[activeDate]) {
+                        activeDate = getLatestDate(appData.sheets);
                     }
 
                     renderTabs();
                     renderAssociateDropdown();
                     renderSheetData();
-                    updateStatus('🟢 Live Synced', 'rgba(52, 211, 153, 0.12)', '#34d399');
+                    persistLocal();
+                    updateStatus('🟢 Live Synced', 'rgba(52, 211, 153, 0.12)', '#10b981');
                 }
             } catch (err) {
-                console.error("Fetch error:", err);
-                updateStatus('⚠️ Cloud Sync Pending', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+                updateStatus('⚠️ Cloud Sync Error', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             }
         }
 
         function debouncedSaveData() {
-            updateStatus('⚡ Storing local...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
-            localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
-
+            persistLocal();
+            if (!GOOGLE_APP_SCRIPT_URL) {
+                updateStatus('🟢 Saved Locally', 'rgba(52, 211, 153, 0.12)', '#10b981');
+                return;
+            }
+            updateStatus('⚡ Syncing...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
             clearTimeout(saveDebounceTimer);
-            saveDebounceTimer = setTimeout(() => { saveData(); }, 600);
+            saveDebounceTimer = setTimeout(() => { saveData(); }, 700);
         }
 
         async function saveData() {
+            if (!GOOGLE_APP_SCRIPT_URL) return;
             isSaving = true;
-            lastSaveTimestamp = Date.now();
-            updateStatus('⚡ Syncing Cloud...', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
-
             try {
                 appData.activeDate = activeDate;
-                localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
-
+                const payload = JSON.stringify(appData);
                 const params = new URLSearchParams();
-                params.append('data', JSON.stringify(appData));
+                params.append('data', payload);
 
                 await fetch(GOOGLE_APP_SCRIPT_URL, {
                     method: 'POST',
@@ -826,16 +1168,11 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: params.toString()
                 });
-
-                updateStatus('🟢 Saved Live', 'rgba(52, 211, 153, 0.12)', '#34d399');
+                updateStatus('🟢 Saved Live', 'rgba(52, 211, 153, 0.12)', '#10b981');
             } catch (err) {
-                console.error("Save error:", err);
-                updateStatus('⚠️ Saved Locally Only', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+                updateStatus('❌ Cloud Save Failed', 'rgba(239, 68, 68, 0.12)', '#ef4444');
             } finally {
-                // Keep the save lock active for 4 seconds so subsequent background polling does not grab stale cache
-                setTimeout(() => {
-                    isSaving = false;
-                }, 4000);
+                isSaving = false;
             }
         }
 
@@ -852,39 +1189,77 @@
         function openAssociateModal() { renderAssociateList(); document.getElementById('associateModal').style.display = 'flex'; }
         function closeAssociateModal() { document.getElementById('associateModal').style.display = 'none'; }
 
-        function addAssociate() {
-            const input = document.getElementById('newAssociateInput');
-            const name = input.value.trim();
-            if (name && !appData.associates.includes(name)) {
-                appData.associates.push(name);
-                appData.associates.sort();
-                input.value = '';
-                renderAssociateList();
-                renderAssociateDropdown();
-                debouncedSaveData();
+        function saveAssociate() {
+            const driverId = document.getElementById('assocDriverId').value.trim();
+            const name = document.getElementById('assocName').value.trim();
+            const facilityId = document.getElementById('assocFacilityId').value.trim();
+            const type = document.getElementById('assocType').value;
+
+            if(!driverId || !name) { alert("Driver ID and Name are required."); return; }
+
+            recordState();
+
+            const existingIndex = appData.associates.findIndex(a => a.driverId === driverId);
+            if (existingIndex >= 0) {
+                appData.associates[existingIndex] = { driverId, name, facilityId, type };
+            } else {
+                appData.associates.push({ driverId, name, facilityId, type });
+            }
+
+            appData.associates.sort((a, b) => a.name.localeCompare(b.name));
+
+            document.getElementById('assocDriverId').value = '';
+            document.getElementById('assocName').value = '';
+            document.getElementById('assocFacilityId').value = '';
+            document.getElementById('assocType').value = 'NDA-Bike';
+
+            renderAssociateList();
+            renderAssociateDropdown();
+            debouncedSaveData();
+        }
+
+        function editAssociate(driverId) {
+            const assoc = appData.associates.find(a => a.driverId === driverId);
+            if (assoc) {
+                document.getElementById('assocDriverId').value = assoc.driverId;
+                document.getElementById('assocName').value = assoc.name;
+                document.getElementById('assocFacilityId').value = assoc.facilityId || '';
+                document.getElementById('assocType').value = assoc.type || 'NDA-Bike';
             }
         }
 
-        function deleteAssociate(name) {
-            if (!confirm(`Remove "${name}" from associate list?`)) return;
-            appData.associates = appData.associates.filter(a => a !== name);
+        function deleteAssociate(driverId) {
+            if(!confirm("Delete this associate mapping?")) return;
+            recordState();
+            appData.associates = appData.associates.filter(a => a.driverId !== driverId);
             renderAssociateList();
             renderAssociateDropdown();
             debouncedSaveData();
         }
 
         function renderAssociateList() {
-            const container = document.getElementById('associateListContainer');
-            container.innerHTML = '';
+            const tbody = document.getElementById('assocDbTableBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('assocCountDisplay').textContent = `${appData.associates.length} Driver Mappings Saved`;
+
             if (!appData.associates || appData.associates.length === 0) {
-                container.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 13px;">No associates saved yet.</div>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 12px;">No mappings found.</td></tr>';
                 return;
             }
-            appData.associates.forEach(name => {
-                const item = document.createElement('div');
-                item.className = 'associate-item';
-                item.innerHTML = `<span><strong>${name}</strong></span><button class="delete-btn" onclick="deleteAssociate('${name}')">✕</button>`;
-                container.appendChild(item);
+            appData.associates.forEach(assoc => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="font-family: monospace; font-size: 12px;">${assoc.driverId}</td>
+                    <td style="font-weight: 600;">${assoc.name}</td>
+                    <td style="font-size: 12px; color: var(--text-muted);">${assoc.facilityId || '-'}</td>
+                    <td style="font-size: 12px;">${assoc.type || '-'}</td>
+                    <td style="text-align: right; padding-right: 12px;">
+                        <button class="db-action-btn edit" onclick="editAssociate('${assoc.driverId}')">Edit</button>
+                        <button class="db-action-btn delete" onclick="deleteAssociate('${assoc.driverId}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
         }
 
@@ -893,20 +1268,101 @@
             const currentValue = select.value;
             select.innerHTML = '<option value="">-- Select Associate --</option>';
             if (appData.associates) {
-                appData.associates.forEach(name => {
+                appData.associates.forEach(assoc => {
                     const opt = document.createElement('option');
-                    opt.value = name; 
-                    opt.textContent = name;
+                    opt.value = assoc.name; 
+                    opt.textContent = assoc.name;
                     select.appendChild(opt);
                 });
             }
             select.value = currentValue;
         }
 
+        function importAssocMapping(event) {
+            const fileReader = new FileReader();
+            fileReader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    recordState();
+                    let newAssociates = [];
+                    
+                    if (Array.isArray(importedData)) {
+                        newAssociates = importedData;
+                    } else if (typeof importedData === 'object' && importedData !== null) {
+                        for (const [driverId, data] of Object.entries(importedData)) {
+                            if (data && data.name) {
+                                newAssociates.push({
+                                    driverId: driverId,
+                                    name: data.name,
+                                    facilityId: data.facilityId || '',
+                                    type: data.type || 'NDA-Bike'
+                                });
+                            }
+                        }
+                    } else {
+                        alert("Invalid mapping file format.");
+                        return;
+                    }
+
+                    appData.associates = newAssociates;
+                    migrateAssociates(); 
+                    renderAssociateList();
+                    renderAssociateDropdown();
+                    debouncedSaveData();
+                    alert("Associates mapping imported successfully.");
+                    
+                } catch(err) {
+                    console.error(err);
+                    alert("Failed to load JSON mapping file.");
+                }
+            };
+            fileReader.readAsText(event.target.files[0]);
+        }
+
+        function exportAssocMapping() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData.associates, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `KLZD_Associate_Mappings_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+        }
+
+        function openNewSheetModal() {
+            document.getElementById('newSheetDateInput').value = new Date().toISOString().split('T')[0];
+            document.getElementById('newSheetCashierInput').value = '';
+            document.getElementById('newSheetModal').style.display = 'flex';
+        }
+
+        function closeNewSheetModal() {
+            document.getElementById('newSheetModal').style.display = 'none';
+        }
+
+        function confirmNewSheet() {
+            const dateVal = document.getElementById('newSheetDateInput').value;
+            const cashierVal = document.getElementById('newSheetCashierInput').value.trim();
+            if(!dateVal) { alert("Date is required."); return; }
+            
+            recordState();
+            if (!appData.sheets[dateVal]) {
+                appData.sheets[dateVal] = {
+                    cashier: cashierVal,
+                    records: [],
+                    finalDeno: { rts: null, c500: 0, c200: 0, c100: 0, c50: 0, c20: 0, c10: 0, coins: 0 }
+                };
+            } else if (cashierVal) {
+                appData.sheets[dateVal].cashier = cashierVal;
+            }
+            switchDate(dateVal);
+            closeNewSheetModal();
+            debouncedSaveData();
+        }
+
         function renderTabs() {
             const tabsContainer = document.getElementById('dateTabs');
             tabsContainer.innerHTML = '';
-            const sortedDates = Object.keys(appData.sheets || {}).sort((a, b) => new Date(b) - new Date(a));
+            const sortedDates = Object.keys(appData.sheets).sort((a, b) => new Date(b) - new Date(a));
 
             sortedDates.forEach(dateStr => {
                 const btn = document.createElement('button');
@@ -917,27 +1373,39 @@
                 tabsContainer.appendChild(btn);
             });
 
+            const currentSheetData = appData.sheets[activeDate];
             document.getElementById('currentDateDisplay').textContent = activeDate;
+
+            const cashierDisplay = document.getElementById('cashierDisplay');
+            const cashierNameText = document.getElementById('cashierNameText');
+            if (currentSheetData && currentSheetData.cashier) {
+                cashierNameText.textContent = currentSheetData.cashier;
+                cashierDisplay.style.display = 'inline-flex';
+            } else {
+                cashierDisplay.style.display = 'none';
+            }
         }
 
         function switchDate(dateStr) {
             activeDate = dateStr;
             renderTabs();
             renderSheetData();
-            localStorage.setItem('klzd_recon_data_v2', JSON.stringify(appData));
+            persistLocal();
         }
 
-        function addNewDatePrompt() {
-            const newDate = prompt("Enter Date for New Sheet (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
-            if (newDate && newDate.trim() !== '') {
-                const cleanDate = newDate.trim();
-                if (!appData.sheets[cleanDate]) {
-                    appData.sheets[cleanDate] = {
-                        records: [],
-                        finalDeno: { rts: null, c500: 0, c200: 0, c100: 0, c50: 0, c20: 0, c10: 0, coins: 0 }
-                    };
-                }
-                switchDate(cleanDate);
+        function deleteCurrentSheet() {
+            if (Object.keys(appData.sheets).length <= 1) {
+                alert("Cannot delete the only remaining date sheet.");
+                return;
+            }
+            const confirmDelete = confirm(`⚠️ WARNING: Are you sure you want to permanently delete the entire sheet for ${activeDate}?`);
+            if (confirmDelete) {
+                recordState();
+                delete appData.sheets[activeDate];
+                activeDate = getLatestDate(appData.sheets);
+                renderTabs();
+                renderSheetData();
+                calculateLiveEntryBalance();
                 debouncedSaveData();
             }
         }
@@ -950,7 +1418,7 @@
 
         function renderSheetData() {
             if(!appData.sheets[activeDate]) {
-                appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
+                appData.sheets[activeDate] = { cashier: "", records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
             }
 
             const currentSheet = appData.sheets[activeDate];
@@ -960,73 +1428,33 @@
             const tbody = document.getElementById('cashTableBody');
             tbody.innerHTML = '';
 
-            let grandRTS = 0, grandCollected = 0, grandPending = 0;
-            let calcDeno = { c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 };
-
             records.forEach((record, index) => {
                 const { totalCollected, balance } = calculateEntry(record);
                 const pending = Number(record.pending) || 0;
 
-                grandRTS += Number(record.rts) || 0;
-                grandCollected += totalCollected;
-                grandPending += pending;
-
-                calcDeno.c500 += Number(record.c500) || 0;
-                calcDeno.c200 += Number(record.c200) || 0;
-                calcDeno.c100 += Number(record.c100) || 0;
-                calcDeno.c50 += Number(record.c50) || 0;
-                calcDeno.c20 += Number(record.c20) || 0;
-                calcDeno.c10 += Number(record.c10) || 0;
-                calcDeno.coins += Number(record.coins) || 0;
-
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td class="sno-cell">${index + 1}</td>
-                    <td style="text-align: left; padding-left: 10px;">
-                        <input type="text" class="editable-input editable-name" value="${record.name || ''}" oninput="updateRecord(${index}, 'name', this.value)">
+                    <td style="text-align: left; padding: 4px 8px;">
+                        <input type="text" class="editable-input editable-name" value="${record.name || ''}" 
+                            onfocus="captureFocusState()"
+                            oninput="updateRecord(${index}, 'name', this.value)">
                     </td>
-                    <td><input type="number" class="editable-input editable-rts" value="${record.rts}" oninput="updateRecord(${index}, 'rts', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c500}" oninput="updateRecord(${index}, 'c500', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c200}" oninput="updateRecord(${index}, 'c200', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c100}" oninput="updateRecord(${index}, 'c100', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c50}" oninput="updateRecord(${index}, 'c50', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c20}" oninput="updateRecord(${index}, 'c20', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.c10}" oninput="updateRecord(${index}, 'c10', this.value)"></td>
-                    <td><input type="number" class="editable-input" value="${record.coins}" oninput="updateRecord(${index}, 'coins', this.value)"></td>
-                    <td><strong id="row-total-${index}">₹${totalCollected.toLocaleString('en-IN')}</strong></td>
-                    <td><span id="row-bal-${index}" class="${balance < 0 ? 'badge-shortage' : 'badge-exact'}">${balance}</span></td>
-                    <td><input type="number" class="editable-input editable-pending" value="${pending}" oninput="updateRecord(${index}, 'pending', this.value)"></td>
-                    <td><button type="button" class="delete-btn" onclick="deleteRecord(${index})">✕</button></td>
+                    <td><input type="number" class="editable-input editable-rts" value="${record.rts}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'rts', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c500}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c500', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c200}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c200', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c100}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c100', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c50}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c50', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c20}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c20', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.c10}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'c10', this.value)"></td>
+                    <td><input type="number" class="editable-input" value="${record.coins}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'coins', this.value)"></td>
+                    <td style="text-align: center;"><strong id="row-total-${index}">₹${totalCollected.toLocaleString('en-IN')}</strong></td>
+                    <td style="text-align: center;"><span id="row-bal-${index}" class="${balance < 0 ? 'badge-shortage' : 'badge-exact'}">${balance}</span></td>
+                    <td><input type="number" class="editable-input editable-pending" value="${pending}" onfocus="captureFocusState()" oninput="updateRecord(${index}, 'pending', this.value)"></td>
+                    <td style="text-align: center;"><button type="button" class="delete-btn" onclick="deleteRecord(${index})" title="Delete Entry">🗑️</button></td>
                 `;
                 tbody.appendChild(row);
             });
-
-            document.getElementById('sum-rts').textContent = '₹' + grandRTS.toLocaleString('en-IN');
-            document.getElementById('sum-collected').textContent = '₹' + grandCollected.toLocaleString('en-IN');
-            document.getElementById('sum-pending').textContent = '₹' + grandPending.toLocaleString('en-IN');
-
-            document.getElementById('calc-c500').textContent = calcDeno.c500;
-            document.getElementById('calc-c200').textContent = calcDeno.c200;
-            document.getElementById('calc-c100').textContent = calcDeno.c100;
-            document.getElementById('calc-c50').textContent = calcDeno.c50;
-            document.getElementById('calc-c20').textContent = calcDeno.c20;
-            document.getElementById('calc-c10').textContent = calcDeno.c10;
-            document.getElementById('calc-coins').textContent = '₹' + calcDeno.coins;
-
-            document.getElementById('vcalc-c500').textContent = '₹' + (calcDeno.c500 * 500).toLocaleString('en-IN');
-            document.getElementById('vcalc-c200').textContent = '₹' + (calcDeno.c200 * 200).toLocaleString('en-IN');
-            document.getElementById('vcalc-c100').textContent = '₹' + (calcDeno.c100 * 100).toLocaleString('en-IN');
-            document.getElementById('vcalc-c50').textContent = '₹' + (calcDeno.c50 * 50).toLocaleString('en-IN');
-            document.getElementById('vcalc-c20').textContent = '₹' + (calcDeno.c20 * 20).toLocaleString('en-IN');
-            document.getElementById('vcalc-c10').textContent = '₹' + (calcDeno.c10 * 10).toLocaleString('en-IN');
-            document.getElementById('vcalc-coins').textContent = '₹' + calcDeno.coins.toLocaleString('en-IN');
-
-            document.getElementById('calc-rts-total').textContent = '₹' + grandRTS.toLocaleString('en-IN');
-            document.getElementById('calc-grand-val').textContent = '₹' + grandCollected.toLocaleString('en-IN');
-
-            const fdRtsVal = (finalDeno.rts !== null && finalDeno.rts !== undefined) ? finalDeno.rts : grandRTS;
-            document.getElementById('fdRtsAmount').value = fdRtsVal;
-            document.getElementById('fd-total-pending').textContent = '₹' + grandPending.toLocaleString('en-IN');
 
             document.getElementById('fd500').value = finalDeno.c500 || 0;
             document.getElementById('fd200').value = finalDeno.c200 || 0;
@@ -1036,67 +1464,21 @@
             document.getElementById('fd10').value = finalDeno.c10 || 0;
             document.getElementById('fdCoins').value = finalDeno.coins || 0;
 
-            const finalTotalCash = (Number(finalDeno.c500 || 0) * 500) + (Number(finalDeno.c200 || 0) * 200) + (Number(finalDeno.c100 || 0) * 100) + (Number(finalDeno.c50 || 0) * 50) + (Number(finalDeno.c20 || 0) * 20) + (Number(finalDeno.c10 || 0) * 10) + (Number(finalDeno.coins || 0));
-
-            document.getElementById('vfd-c500').textContent = '₹' + ((finalDeno.c500 || 0) * 500).toLocaleString('en-IN');
-            document.getElementById('vfd-c200').textContent = '₹' + ((finalDeno.c200 || 0) * 200).toLocaleString('en-IN');
-            document.getElementById('vfd-c100').textContent = '₹' + ((finalDeno.c100 || 0) * 100).toLocaleString('en-IN');
-            document.getElementById('vfd-c50').textContent = '₹' + ((finalDeno.c50 || 0) * 50).toLocaleString('en-IN');
-            document.getElementById('vfd-c20').textContent = '₹' + ((finalDeno.c20 || 0) * 20).toLocaleString('en-IN');
-            document.getElementById('vfd-c10').textContent = '₹' + ((finalDeno.c10 || 0) * 10).toLocaleString('en-IN');
-            document.getElementById('vfd-coins').textContent = '₹' + (finalDeno.coins || 0).toLocaleString('en-IN');
-
-            document.getElementById('final-grand-val').textContent = '₹' + finalTotalCash.toLocaleString('en-IN');
-            document.getElementById('sum-final-cash').textContent = '₹' + finalTotalCash.toLocaleString('en-IN');
-
-            const finalDenoRts = Number(fdRtsVal) || 0;
-            const diff = finalDenoRts - finalTotalCash - grandPending;
-            
-            const diffElem = document.getElementById('fdDiffVal');
-            const statusElem = document.getElementById('reconcileStatus');
-
-            diffElem.textContent = '₹' + diff.toLocaleString('en-IN');
-            if (diff === 0) {
-                statusElem.textContent = "Matched Exact";
-                statusElem.className = "status-pill status-match";
-                diffElem.style.color = "#34d399";
-            } else {
-                statusElem.textContent = `Variance: ₹${diff}`;
-                statusElem.className = "status-pill status-mismatch";
-                diffElem.style.color = "#fca5a5";
-            }
-
-            renderPendingAssociatesList();
+            updateTotalsOnly();
         }
 
-        function renderPendingAssociatesList() {
-            const currentSheet = appData.sheets[activeDate];
-            const pendingTbody = document.getElementById('associatePendingTableBody');
-            pendingTbody.innerHTML = '';
-
-            let totalPending = 0;
-            const pendingRecords = (currentSheet.records || []).filter(r => Number(r.pending) > 0);
-
-            if (pendingRecords.length === 0) {
-                pendingTbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: #34d399; padding: 12px; font-weight: 600;">🎉 No pending amounts for today!</td></tr>`;
-            } else {
-                pendingRecords.forEach(record => {
-                    const pAmt = Number(record.pending) || 0;
-                    totalPending += pAmt;
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `<td style="font-weight: 600; color: var(--primary);">${record.name || 'Unnamed Associate'}</td><td style="text-align: right; font-weight: 700; color: #fca5a5;">₹${pAmt.toLocaleString('en-IN')}</td>`;
-                    pendingTbody.appendChild(tr);
-                });
-            }
-
-            document.getElementById('side-total-pending').textContent = '₹' + totalPending.toLocaleString('en-IN');
+        function captureFocusState() {
+            recordState();
         }
 
         function updateRecord(index, key, value) {
-            if (key === 'name') appData.sheets[activeDate].records[index][key] = value;
-            else appData.sheets[activeDate].records[index][key] = Number(value) || 0;
+            const sheet = appData.sheets[activeDate];
+            if (!sheet || !sheet.records[index]) return;
 
-            const record = appData.sheets[activeDate].records[index];
+            if (key === 'name') sheet.records[index][key] = value;
+            else sheet.records[index][key] = Number(value) || 0;
+
+            const record = sheet.records[index];
             const { totalCollected, balance } = calculateEntry(record);
             const rowTotalElem = document.getElementById(`row-total-${index}`);
             const rowBalElem = document.getElementById(`row-bal-${index}`);
@@ -1112,6 +1494,7 @@
         }
 
         function updateFinalDeno(fieldKey, value) {
+            recordState();
             const keyMap = { 'fd500': 'c500', 'fd200': 'c200', 'fd100': 'c100', 'fd50': 'c50', 'fd20': 'c20', 'fd10': 'c10', 'fdCoins': 'coins' };
             const targetKey = keyMap[fieldKey];
             if (!appData.sheets[activeDate].finalDeno) {
@@ -1123,6 +1506,7 @@
         }
 
         function updateFinalDenoRts(value) {
+            recordState();
             if (!appData.sheets[activeDate].finalDeno) {
                 appData.sheets[activeDate].finalDeno = { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 };
             }
@@ -1190,9 +1574,15 @@
             document.getElementById('final-grand-val').textContent = '₹' + finalTotalCash.toLocaleString('en-IN');
             document.getElementById('sum-final-cash').textContent = '₹' + finalTotalCash.toLocaleString('en-IN');
 
-            const fdRtsVal = (finalDeno.rts !== null && finalDeno.rts !== undefined) ? finalDeno.rts : grandRTS;
-            const diff = (Number(fdRtsVal) || 0) - finalTotalCash - grandPending;
-            
+            const fdRtsInput = document.getElementById('fdRtsAmount');
+            if (document.activeElement !== fdRtsInput) {
+                const fdRtsVal = (finalDeno.rts !== null && finalDeno.rts !== undefined) ? finalDeno.rts : grandRTS;
+                fdRtsInput.value = fdRtsVal;
+            }
+
+            document.getElementById('fd-total-pending').textContent = '₹' + grandPending.toLocaleString('en-IN');
+
+            const diff = Number(fdRtsInput.value || 0) - finalTotalCash - grandPending;
             const diffElem = document.getElementById('fdDiffVal');
             const statusElem = document.getElementById('reconcileStatus');
 
@@ -1200,21 +1590,112 @@
             if (diff === 0) {
                 statusElem.textContent = "Matched Exact";
                 statusElem.className = "status-pill status-match";
-                diffElem.style.color = "#34d399";
+                diffElem.style.color = "var(--success-text)";
             } else {
                 statusElem.textContent = `Variance: ₹${diff}`;
                 statusElem.className = "status-pill status-mismatch";
-                diffElem.style.color = "#fca5a5";
+                diffElem.style.color = "var(--danger-text)";
             }
 
             renderPendingAssociatesList();
         }
 
-        // Form submission with write-lock protection
-        document.getElementById('cashForm').addEventListener('submit', async function(e) {
+        function renderPendingAssociatesList() {
+            const currentSheet = appData.sheets[activeDate];
+            const pendingTbody = document.getElementById('associatePendingTableBody');
+            pendingTbody.innerHTML = '';
+
+            let totalPending = 0;
+            const pendingRecords = (currentSheet.records || []).filter(r => Number(r.pending) > 0);
+
+            if (pendingRecords.length === 0) {
+                pendingTbody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--success-text); padding: 12px; font-weight: 600;">🎉 No pending amounts for today!</td></tr>`;
+            } else {
+                pendingRecords.forEach(record => {
+                    const pAmt = Number(record.pending) || 0;
+                    totalPending += pAmt;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `<td style="font-weight: 600; color: var(--primary);">${record.name || 'Unnamed Associate'}</td><td style="text-align: right; font-weight: 700; color: var(--danger-text);">₹${pAmt.toLocaleString('en-IN')}</td>`;
+                    pendingTbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('side-total-pending').textContent = '₹' + totalPending.toLocaleString('en-IN');
+        }
+
+        async function captureElementToBlob(elementId) {
+            const element = document.getElementById(elementId);
+            
+            const noCaptureEls = element.querySelectorAll('.no-capture');
+            noCaptureEls.forEach(el => el.style.display = 'none');
+            
+            const canvas = await html2canvas(element, { 
+                backgroundColor: getComputedStyle(element).backgroundColor,
+                scale: 2 
+            });
+            
+            noCaptureEls.forEach(el => el.style.display = '');
+
+            return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+        }
+
+        async function copyScreenshot() {
+            try {
+                const blob = await captureElementToBlob('finalDenoSection');
+                const item = new ClipboardItem({ "image/png": blob });
+                await navigator.clipboard.write([item]);
+                alert("📸 Screenshot copied to clipboard!");
+            } catch (err) {
+                console.error(err);
+                alert("Failed to copy screenshot. Make sure you are using a secure connection (HTTPS).");
+            }
+        }
+
+        async function sharePendingWhatsApp() {
+            const currentSheet = appData.sheets[activeDate];
+            if (!currentSheet) return;
+
+            const pendingRecords = (currentSheet.records || []).filter(r => Number(r.pending) > 0);
+            if (pendingRecords.length === 0) {
+                alert("No pending amounts to share.");
+                return;
+            }
+
+            let totalPending = 0;
+            let text = `*Pending Amounts - ${activeDate}*\n`;
+            if (currentSheet.cashier) {
+                text += `Cashier: ${currentSheet.cashier} ✅\n`;
+            }
+            text += `\n`;
+
+            pendingRecords.forEach(r => {
+                const pAmt = Number(r.pending) || 0;
+                totalPending += pAmt;
+                text += `• ${r.name || 'Unnamed'}: ₹${pAmt.toLocaleString('en-IN')}\n`;
+            });
+
+            text += `----------------------\n`;
+            text += `*Total Pending: ₹${totalPending.toLocaleString('en-IN')}*`;
+
+            try {
+                const blob = await captureElementToBlob('finalDenoSection');
+                const item = new ClipboardItem({ "image/png": blob });
+                await navigator.clipboard.write([item]);
+                alert("📸 Screenshot copied to clipboard!\n\nOpening WhatsApp... Please paste (Ctrl+V) the image in your chat.");
+            } catch (err) {
+                console.error("Clipboard error:", err);
+            }
+
+            const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+            window.open(url, '_blank');
+        }
+
+        document.getElementById('cashForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const nameVal = document.getElementById('associateSelect').value;
             if(!nameVal) { alert("Please select an associate or add one via 'Manage Associates'."); return; }
+
+            recordState();
 
             const newRecord = {
                 id: Date.now(),
@@ -1230,13 +1711,10 @@
                 pending: Number(document.getElementById('pendingAmount').value) || 0
             };
 
-            if(!appData.sheets[activeDate]) {
-                appData.sheets[activeDate] = { records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
-            }
+            if(!appData.sheets[activeDate]) appData.sheets[activeDate] = { cashier: "", records: [], finalDeno: { rts: null, c500:0, c200:0, c100:0, c50:0, c20:0, c10:0, coins:0 } };
 
             appData.sheets[activeDate].records.push(newRecord);
             
-            // Clear inputs
             document.getElementById('associateSelect').value = '';
             document.getElementById('rtsAmount').value = '';
             document.getElementById('c500').value = '0';
@@ -1248,12 +1726,15 @@
             document.getElementById('coins').value = '0';
             document.getElementById('pendingAmount').value = '0';
 
+            calculateLiveEntryBalance();
+
             renderSheetData();
-            await saveData();
+            debouncedSaveData();
         });
 
         function deleteRecord(index) {
-            if (!confirm("Delete this record?")) return;
+            if (!confirm("Are you sure you want to delete this entry?")) return;
+            recordState();
             appData.sheets[activeDate].records.splice(index, 1);
             renderSheetData();
             debouncedSaveData();
@@ -1263,7 +1744,7 @@
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appData, null, 2));
             const dlAnchor = document.createElement('a');
             dlAnchor.setAttribute("href", dataStr);
-            dlAnchor.setAttribute("download", `cash_reconciliation_backup_${new Date().toISOString().split('T')[0]}.json`);
+            dlAnchor.setAttribute("download", `Cash_KLZD_2026_${new Date().toISOString().split('T')[0]}.json`);
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
@@ -1275,8 +1756,9 @@
                 try {
                     const importedData = JSON.parse(e.target.result);
                     if (importedData && importedData.sheets) {
-                        appData = mergeDatasets(appData, importedData);
-                        activeDate = getLatestDate(appData.sheets);
+                        recordState();
+                        appData = importedData;
+                        activeDate = getLatestDate(importedData.sheets);
                         renderTabs();
                         renderAssociateDropdown();
                         renderSheetData();
@@ -1291,14 +1773,20 @@
             fileReader.readAsText(event.target.files[0]);
         }
 
-        // Render local storage on immediate load
+        loadLocalData();
         renderTabs();
         renderAssociateDropdown();
         renderSheetData();
+        updateUndoRedoButtons();
+        calculateLiveEntryBalance();
 
-        // Initial sync and background sync interval (every 15 seconds)
-        fetchLiveData();
-        setInterval(fetchLiveData, 15000);
+        if (GOOGLE_APP_SCRIPT_URL) {
+            updateStatus('🔄 Connecting Cloud...', 'rgba(52, 211, 153, 0.12)', '#10b981');
+            fetchLiveData();
+            setInterval(fetchLiveData, 5000); 
+        } else {
+            updateStatus('⚠️ Cloud Offline (Local Only)', 'rgba(245, 158, 11, 0.12)', '#f59e0b');
+        }
     </script>
 </body>
 </html>
