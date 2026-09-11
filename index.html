@@ -942,11 +942,7 @@
 
     <script>
         const LOCAL_STORAGE_KEY = 'cash_klzd_2026_data';
-        
-        // --- UPDATED GOOGLE APPS SCRIPT WEB APP URL ---
         const GOOGLE_APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-C2uopjrdJtsYzH7BGNl9WKv2pAJ6Qi91r-9ub1rutmVFyMvvSTE0h55V1uPX0CSg/exec'; 
-        // ----------------------------------------------
-        
         const THEME_STORAGE_KEY = 'cash_klzd_theme';
 
         const todayStr = new Date().toISOString().split('T')[0];
@@ -1106,6 +1102,8 @@
 
         async function fetchLiveData() {
             if (!GOOGLE_APP_SCRIPT_URL) return;
+            
+            // TYPING/EDITING LOCK: Skip background fetch entirely if user is currently typing or interacting with an input/select
             if (isSaving || (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT'))) {
                 return;
             }
@@ -1117,6 +1115,7 @@
                 try { parsed = JSON.parse(textData); } catch(e) {}
 
                 if (parsed && typeof parsed === 'object') {
+                    // Double check typing lock before updating DOM
                     if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
                         return;
                     }
